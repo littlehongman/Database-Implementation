@@ -4,18 +4,22 @@
 
 #include "MyDB_PageHandle.h"
 #include "MyDB_Table.h"
+#include <queue>
+#include <unordered_map>
+#include "MyDB_Page.h"
 
 using namespace std;
 
 class MyDB_BufferManager {
 
 public:
-
 	// THESE METHODS MUST APPEAR AND THE PROTOTYPES CANNOT CHANGE!
 
 	// gets the i^th page in the table whichTable... note that if the page
 	// is currently being used (that is, the page is current buffered) a handle 
 	// to that already-buffered page should be returned
+
+    // Johnson: return the pageId i from the table whichTable
 	MyDB_PageHandle getPage (MyDB_TablePtr whichTable, long i);
 
 	// gets a temporary page that will no longer exist (1) after the buffer manager
@@ -50,8 +54,17 @@ public:
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS 
 
 private:
-
 	// YOUR STUFF HERE
+    size_t numPages;
+    size_t pageSize;
+    string tempFile;
+
+    // Use to map pageId to the page in the buffer pool
+    // Can check if the pageId is existed in the buffer pool
+    std::unordered_map<long, Page*> pageMap;
+
+    // Actual buffer pool, holding disk pages
+    std::priority_queue<Page> *lruBufferPool;
 
 };
 
