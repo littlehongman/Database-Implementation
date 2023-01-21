@@ -43,3 +43,5 @@ private:
     bool isPinned;
     std :: time_t lastAccessTime;
 };
+
+#endif
