@@ -7,11 +7,11 @@
 class Node {
 public:
 
-    Node(Page* pagePtr);
-    Node(Page* pagePtr, Node* prev, Node* next);
+    Node(size_t pageSize);
+    Node(size_t pageSize, Node* prev, Node* next);
 
 private:
-    Page* pagePtr;
+    Page* page;
 
     Node* prev;
     Node* next;
@@ -30,4 +30,4 @@ private:
     long size;
 };
 
-#endif LRU_H
+#endif
