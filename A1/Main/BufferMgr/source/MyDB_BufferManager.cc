@@ -63,6 +63,19 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
     numPages = numPages;
     pageSize = pageSize;
     tempFile = tempFile;
+    head = new MyDB_Node(pageSize);
+    tail = new MyDB_Node(pageSize);
+
+    MyDB_Node* curr = head;
+    for (int i = 0; i < numPages; i++){
+        curr->next = new MyDB_Node(pageSize);
+        curr->next->prev = curr;
+        curr = curr->next;
+    }
+
+    curr->next = tail;
+    tail->prev = curr;
+
 
     // Allocate memory for the whole buffer pool
     lruBufferPool = (Page *)malloc(pageSize * numPages);
@@ -71,7 +84,23 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 MyDB_BufferManager :: ~MyDB_BufferManager () {
     free(lruBufferPool);
 }
-	
+
+
+void MyDB_BufferManager :: removeNode(MyDB_Node* node){
+    prev = node->prev;
+    next = node->next;
+    prev->next = next;
+    next->prev = prev;
+}
+
+void MyDB_BufferManager :: appendHead(MyDB_Node* node){
+    temp = head->next;
+    head->next = node;
+    node->prev = head;
+    node->next = temp;
+    temp->prev = node;
+}
+
 #endif
 
 

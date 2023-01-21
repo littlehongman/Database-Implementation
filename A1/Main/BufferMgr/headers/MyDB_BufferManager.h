@@ -10,6 +10,23 @@
 
 using namespace std;
 
+// Wrapper for a page
+struct MyDB_Node {
+    MyDB_Node* prev;
+    MyDB_Node* next;
+    Page* page;
+
+    MyDB_Node(size_t pageSize) {
+        page = new Page(pageSize);
+        prev = nullptr;
+        next = nullptr;
+    }
+
+    ~MyDB_Node() {
+        delete page;
+    }
+};
+
 class MyDB_BufferManager {
 
 public:
@@ -64,7 +81,13 @@ private:
     std::unordered_map<long, Page*> pageMap;
 
     // Actual buffer pool, holding disk pages
-    std::priority_queue<Page> *lruBufferPool;
+//    std::priority_queue<Page> *lruBufferPool;
+
+    MyDB_Node *head;
+    MyDB_Node *tail;
+
+    void removeNode(MyDB_Node *node);
+    void appendHead(MyDB_Node *node);
 
 };
 
