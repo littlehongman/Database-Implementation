@@ -30,13 +30,19 @@ class LRU {
 public:
     LRU(size_t numPages);
 
-    void append(Node* node);
-    void remove(Node* node);
+    Node* popLRU(); // helper function
+
+    void pushMRU(Node* node); // helper function
+
+    void updateMRU(Node* node); // helper function
+
+    void insert(Page* pagePtr);
 
 private:
     Node* head;
     Node* tail;
     long size;
+    size_t capacity;
 };
 
 #endif
