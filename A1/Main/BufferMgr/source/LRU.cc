@@ -16,6 +16,26 @@ Node :: Node(Page* pagePtr, Node* prev, Node* next) {
     next = next;
 }
 
+Page* Node :: getPage() {
+    return pagePtr;
+}
+
+Node* Node :: getPrev() {
+    return prev;
+}
+
+Node* Node :: getNext() {
+    return next;
+}
+
+void Node :: setPrev(Node* prev) {
+    prev = prev;
+}
+
+void Node :: setNext(Node* next) {
+    next = next;
+}
+
 LRU :: LRU() {
     head = nullptr;
     tail = nullptr;
@@ -37,4 +57,4 @@ LRU :: remove(Node* node) {
     next->prev = prev;
 }
 
-#endif LRU_C
+#endif
