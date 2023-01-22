@@ -19,7 +19,7 @@ private:
 
 class LRU {
 public:
-    LRU();
+    LRU(size_t numPages);
 
     void append(Node* node);
     void remove(Node* node);
@@ -27,7 +27,7 @@ public:
 private:
     Node* head;
     Node* tail;
-    long size;
+    size_t numPages;
 };
 
 #endif

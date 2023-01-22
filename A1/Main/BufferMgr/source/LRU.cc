@@ -16,10 +16,11 @@ Node :: Node(size_t pageSize, Node* prev, Node* next) {
     next = next;
 }
 
-LRU :: LRU() {
-    head = Node(1)
-    tail = Node(1);
-    size = 0;
+LRU :: LRU(size_t numPages) {
+    head = nullptr
+    tail = nullptr;
+
+    numPages = numPages;
 }
 
 LRU :: append(Node* node) {
