@@ -12,7 +12,16 @@ void *MyDB_PageHandleBase :: getBytes () {
 void MyDB_PageHandleBase :: wroteBytes () {
 }
 
+Page* getPagePtr(){
+    return this->pagePtr;
+}
+
 MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
+}
+
+MyDB_PageHandle :: MyDB_PageHandle (Page* pagePtr) {
+    pagePtr = pagePtr;
+}
 }
 
 #endif
