@@ -35,9 +35,9 @@ public:
 
     void pushMRU(Node *node); // helper function
 
-    void updateMRU(Node *node); // helper function
+    void updateMRU(Node *node);
 
-    void insert(Page *pagePtr);
+    Node* insert(Page *pagePtr);
 
 private:
     Node *head;

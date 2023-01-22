@@ -71,12 +71,14 @@ void LRU :: updateMRU(Node* node) { // Node is already in cache, just update it
     pushMRU(node);
 }
 
-void LRU :: insert(Page* pagePtr) {
+Node* LRU :: insert(Page* pagePtr) {
     Node *node = new Node(pagePtr);
+    Node* temp = nullptr;
     if (this->size == this->capacity) {
-        popLRU(this->tail->getPrev()); // tail->prev is the LRU node
+        temp = popLRU(this->tail->getPrev()); // tail->prev is the LRU node
     }
     pushMRU(node);
+    return temp;
 }
 
 #endif
