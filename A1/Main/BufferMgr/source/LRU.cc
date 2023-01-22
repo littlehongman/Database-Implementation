@@ -5,65 +5,65 @@
 #include "LRU.h"
 
 Node :: Node(Page* pagePtr) {
-    pagePtr = pagePtr;
-    prev = nullptr;
-    next = nullptr;
+    this->pagePtr = pagePtr;
+    this->prev = nullptr;
+    this->next = nullptr;
 }
 
 Node :: Node(Page* pagePtr, Node* prev, Node* next) {
-    pagePtr = pagePtr;
-    prev = prev;
-    next = next;
+    this->pagePtr = pagePtr;
+    this->prev = prev;
+    this->next = next;
 }
 
 Page* Node :: getPage() {
-    return pagePtr;
+    return this->pagePtr;
 }
 
 Node* Node :: getPrev() {
-    return prev;
+    return this->prev;
 }
 
 Node* Node :: getNext() {
-    return next;
+    return this->next;
 }
 
 void Node :: setPrev(Node* prev) {
-    prev = prev;
+    this->prev = prev;
 }
 
 void Node :: setNext(Node* next) {
-    next = next;
+    this->next = next;
 }
 
 LRU :: LRU(size_t numPages) {
-    head = new Node(nullptr);
-    tail = new Node(nullptr);
-    head.setNext(tail); // head->next = tail;
-    tail.setPrev(head); // tail->prev = head;
-    size = 0;
-    capacity = numPages;
+    this->head = new Node(nullptr);
+    this->tail = new Node(nullptr);
+    this->head->setNext(tail); // head->next = tail;
+    this->tail->setPrev(head); // tail->prev = head;
+    this->size = 0;
+    this->capacity = numPages;
 }
 
 Node* LRU :: popLRU(Node* node) {
-    if size == 0 {
+    if (this->size == 0) {
         return nullptr;
     }
-    node.getPrev().setNext(tail); // node->prev->next = tail;
-    tail.setPrev(node.getPrev()); // tail->prev = node->prev;
-    node.setPrev(nullptr); // node->prev = nullptr;
-    node.setNext(nullptr); // node->next = nullptr;
+    node->getPrev()->setNext(this->tail); // node->prev->next = tail;
+    this->tail->setPrev(node->getPrev()); // tail->prev = node->prev;
+    node->setPrev(nullptr); // node->prev = nullptr;
+    node->setNext(nullptr); // node->next = nullptr;
     // TODO: do something with the deleted node
     size--;
     return node;
 }
 
 void LRU :: pushMRU(Node* node) {
-    node.setNext(head.getNext()); // node->next = head->next;
-    node.setPrev(head); // node->prev = head;
-    head.getNext().setPrev(node); // head->next->prev = node;
-    head.setNext(node); // head->next = node;
-    size++;
+    node->setNext(this->head->getNext()); // node->next = head->next;
+    node->setPrev(this->head); // node->prev = head;
+    this->head->getNext()->setPrev(node); // head->next->prev = node;
+    this->head->setNext(node); // head->next = node;
+    this->size++;
 }
 
 void LRU :: updateMRU(Node* node) { // Node is already in cache, just update it
@@ -72,9 +72,9 @@ void LRU :: updateMRU(Node* node) { // Node is already in cache, just update it
 }
 
 void LRU :: insert(Page* pagePtr) {
-    Node* node = new Node(pagePtr);
-    if (size == capacity) {
-        popLRU(tail.getPrev()); // tail->prev is the LRU node
+    Node *node = new Node(pagePtr);
+    if (this->size == this->capacity) {
+        popLRU(this->tail->getPrev()); // tail->prev is the LRU node
     }
     pushMRU(node);
 }

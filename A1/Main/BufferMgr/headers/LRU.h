@@ -7,42 +7,44 @@
 class Node {
 public:
 
-    Node(Page* pagePtr);
-    Node(Page* pagePtr, Node* prev, Node* next);
+    Node(Page *pagePtr);
 
-    Page* getPage();
+    Node(Page *pagePtr, Node *prev, Node *next);
 
-    Node* getPrev();
+    Page *getPage();
 
-    Node* getNext();
+    Node *getPrev();
 
-    void setPrev(Node* prev);
+    Node *getNext();
 
-    void setNext(Node* next);
+    void setPrev(Node *prev);
+
+    void setNext(Node *next);
 
 private:
-    Page* pagePtr;
-    Node* prev;
-    Node* next;
+    Page *pagePtr;
+    Node *prev;
+    Node *next;
 };
 
 class LRU {
 public:
     LRU(size_t numPages);
 
-    Node* popLRU(); // helper function
+    Node* popLRU(Node *node); // helper function
 
-    void pushMRU(Node* node); // helper function
+    void pushMRU(Node *node); // helper function
 
-    void updateMRU(Node* node); // helper function
+    void updateMRU(Node *node); // helper function
 
-    void insert(Page* pagePtr);
+    void insert(Page *pagePtr);
 
 private:
-    Node* head;
-    Node* tail;
+    Node *head;
+    Node *tail;
     long size;
     size_t capacity;
+
 };
 
 #endif
