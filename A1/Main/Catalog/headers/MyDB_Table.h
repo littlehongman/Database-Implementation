@@ -31,9 +31,11 @@ public:
 private:
 
 	// the name of the table
+    // Johnson: The name of the database table that is recognized by the program
 	string tableName;
 
 	// the location where it is stored
+    // Johnson: The place where the data of the database table is actually stored
 	string storageLoc;
 };
 
