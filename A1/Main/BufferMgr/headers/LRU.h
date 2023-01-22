@@ -7,12 +7,21 @@
 class Node {
 public:
 
-    Node(size_t pageSize);
-    Node(size_t pageSize, Node* prev, Node* next);
+    Node(Page* pagePtr);
+    Node(Page* pagePtr, Node* prev, Node* next);
+
+    Page* getPage();
+
+    Node* getPrev();
+
+    Node* getNext();
+
+    void setPrev(Node* prev);
+
+    void setNext(Node* next);
 
 private:
-    Page* page;
-
+    Page* pagePtr;
     Node* prev;
     Node* next;
 };
@@ -21,13 +30,19 @@ class LRU {
 public:
     LRU(size_t numPages);
 
-    void append(Node* node);
-    void remove(Node* node);
+    Node* popLRU(); // helper function
+
+    void pushMRU(Node* node); // helper function
+
+    void updateMRU(Node* node); // helper function
+
+    void insert(Page* pagePtr);
 
 private:
     Node* head;
     Node* tail;
-    size_t numPages;
+    long size;
+    size_t capacity;
 };
 
 #endif
