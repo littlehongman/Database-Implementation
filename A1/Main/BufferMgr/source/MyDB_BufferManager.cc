@@ -3,72 +3,111 @@
 #define BUFFER_MGR_C
 
 #include "MyDB_BufferManager.h"
+#include "MyDB_PageHandle.h"
 #include <string>
 #include <ctime>
+#include <memory>
 #include "MyDB_Page.h"
+
 
 using namespace std;
 
-MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr, long i) {
-    // If the page is already in the buffer pool
-    if (pageMap.find(i) != pageMap.end()){
-        Page* requestPage = pageMap[i];
+// Return a handle to the page with the given Table and pageId => Not anonymous
+MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
+    auto key = make_pair(tablePtr->getName(), i);
 
-        return nullptr;
+    // If the page is already in the buffer
+    if (pageMap.find(key) != pageMap.end()){
+        Page *pagePtr = pageMap[key];
+        MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(pagePtr);
+
+        // TODO: update the LRU order
+        //TODO: think if accessTime is needed
+
+        return handle;
     }
-    // Else if the page is not in the buffer pool
+    //  If the page is not in the buffer
     else{
-        // If the buffer pool is full
-        if (pageMap.size() == numPages){
+        // If the buffer pool is not full
+        if (pageMap.size() != this->numPages){
+            Page *newPagePtr = new Page(tablePtr, i);
+            MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
+
+            // Apply LRU policy to the page
+            lru.insert(pagePtr);
+
+            // Store the pagePtr in the unordered_map
+            pageMap[key] = pagePtr;
+
+            // TODO: update the LRU order
 
             return nullptr;
         }
-        // If the buffer pool is not full
+        // If the buffer pool is full
         else{
-            // Create a new page object and
-            // Map the pageId to the pointer of the page object
-            // Add the page object to the buffer pool
-            Page *newPage = new Page(pageSize);
-            newPage->setLastAccessTime(time(nullptr));
+            Page *newPagePtr = new Page(tablePtr, i);
+            MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
 
+            // Apply LRU policy to the page
+            // TODO: get the pagePtr that is evicted
+            lru.insert(pagePtr);
 
-            pageMap[i] = newPage;
-            lruBufferPool.push(*newPage);
+            // Store the pagePtr in the unordered_map
+            pageMap[key] = pagePtr;
 
-            return nullptr;
+            // TODO: update the LRU order
+            // TODO: Remove the evicted page from the unordered_map
+
+            return handle;
         }
     }
-
-
-
-	return nullptr;
 }
 
+// Return an anonymous page -> No need to track with pageMap
 MyDB_PageHandle MyDB_BufferManager :: getPage () {
-	return nullptr;		
+    Page *newPagePtr = new Page();
+    MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
+
+    lru.insert(pagePtr);
+
+
+	return handle;
 }
 
-MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (MyDB_TablePtr, long) {
-	return nullptr;		
+MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (MyDB_TablePtr tablePtr, long i) {
+    MyDB_PageHandle handle = getPage(tablePtr, i);
+    handle->pagePtr->pin();
+
+	return handle;
 }
 
 MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
-	return nullptr;		
+    MyDB_PageHandle handle = getPage();
+    handle->pagePtr->pin();
+
+	return handle;
 }
 
 void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
+    unpinMe->pagePtr->unpin();
+
+    return;
 }
 
 MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, string tempFile) {
     numPages = numPages;
     pageSize = pageSize;
     tempFile = tempFile;
-    // Allocate memory for the whole buffer pool
-    lruBufferPool = (Page *)malloc(pageSize * numPages);
+
+    // Allocate memory for the whole buffer
+    // TODO: WHY CAST THE MEMORY TO CHAR*?
+    buffer = (char *)malloc(pageSize * numPages);
+
+    lru = new LRU(numPages);
 }
 
 MyDB_BufferManager :: ~MyDB_BufferManager () {
-    free(lruBufferPool);
+
 }
 
 #endif

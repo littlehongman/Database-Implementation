@@ -54,17 +54,19 @@ public:
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS 
 
 private:
-	// YOUR STUFF HERE
     size_t numPages;
     size_t pageSize;
     string tempFile;
 
-    // Use to map pageId to the page in the buffer pool
-    // Can check if the pageId is existed in the buffer pool
-    std::unordered_map<long, Page*> pageMap;
+    // key:pair<tableName, pageId>
+    // val = A pointer to the page object
+    std::unordered_map<std::pair<string, long>, Page*> pageMap;
 
-    // Actual buffer pool, holding disk pages
-//    std::priority_queue<Page> *lruBufferPool;
+    // Apply LRU policy to maintain buffer pool
+    LRU lru;
+
+    // The actual space for the buffer pool
+    char *buffer;
 
 };
 
