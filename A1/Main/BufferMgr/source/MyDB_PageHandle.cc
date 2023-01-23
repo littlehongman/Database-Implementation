@@ -21,7 +21,7 @@ MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
 
 MyDB_PageHandle :: MyDB_PageHandle (Page* pagePtr) {
     pagePtr = pagePtr;
-}
+    pagePtr->increaseReferenceCount();
 }
 
 #endif

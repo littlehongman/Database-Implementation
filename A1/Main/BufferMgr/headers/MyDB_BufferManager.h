@@ -66,7 +66,11 @@ private:
     LRU lru;
 
     // The actual space for the buffer pool
+    // buffer will point to the beginning of the buffer pool
     char *buffer;
+
+    // Store the chunkId in which the chunk of the buffer pool is free
+    set<size_t> chunkIds;
 
 };
 

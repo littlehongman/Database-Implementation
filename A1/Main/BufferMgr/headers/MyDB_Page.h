@@ -35,6 +35,12 @@ public:
     // Unpin the page, if the page is unpinned, then it can be evicted from buffer pool.
     void unpin();
 
+    // Increase the reference count of the page when a page handle base is create to reference the page.
+    void increaseReferenceCount();
+
+    // Decrease the reference count of the page when a page handle base is destroyed.
+    void decreaseReferenceCount();
+
 //    // Increase the pin count when the page is requested. (A query is executed on the page)
 //    void incrementPinCount();
 //
@@ -55,8 +61,8 @@ private:
 
     // Other attributes of the page
     bool isDirty;
-//    bool isAnonymous;
     bool isPinned;
+    long referenceCount;
 
     // long pinCount;
 //    std :: time_t lastAccessTime;

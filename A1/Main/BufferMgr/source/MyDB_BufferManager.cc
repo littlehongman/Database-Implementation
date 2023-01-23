@@ -104,6 +104,11 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
     buffer = (char *)malloc(pageSize * numPages);
 
     lru = new LRU(numPages);
+
+    // Initialize the set of chunkIds
+    for (int i = 0; i < numPages; i++){
+        chunkIds.insert(i);
+    }
 }
 
 MyDB_BufferManager :: ~MyDB_BufferManager () {

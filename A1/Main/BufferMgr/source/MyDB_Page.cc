@@ -12,6 +12,8 @@ Page :: Page() {
 
     this->isDirty = false;
     this->isPinned = false;
+
+    this->referenceCount = 0;
 }
 
 Page :: Page(MyDB_TablePtr tablePtr, long i) {
@@ -20,6 +22,8 @@ Page :: Page(MyDB_TablePtr tablePtr, long i) {
 
     this->isDirty = false;
     this->isPinned = false;
+
+    this->referenceCount = 0;
 }
 
 MyDB_TablePtr Page :: getTablePtr() {
@@ -48,6 +52,14 @@ void Page :: pin() {
 
 void Page :: unpin() {
     this->isPinned = false;
+}
+
+void Page :: increaseReferenceCount() {
+    this->referenceCount++;
+}
+
+void Page :: decreaseReferenceCount() {
+    this->referenceCount--;
 }
 
 # endif
