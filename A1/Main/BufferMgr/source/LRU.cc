@@ -49,8 +49,11 @@ Node* LRU :: popLRU(Node* node) {
     if (this->size == 0) {
         return nullptr;
     }
-    node->getPrev()->setNext(this->tail); // node->prev->next = tail;
-    this->tail->setPrev(node->getPrev()); // tail->prev = node->prev;
+    Node* prev = node->getPrev();
+    Node* next = node->getNext();
+    prev->setNext(next);
+    next->setPrev(prev);
+
     node->setPrev(nullptr); // node->prev = nullptr;
     node->setNext(nullptr); // node->next = nullptr;
     // TODO: do something with the deleted node
@@ -72,10 +75,15 @@ void LRU :: updateMRU(Node* node) { // Node is already in cache, just update it
 }
 
 Node* LRU :: insert(Page* pagePtr) {
-    Node *node = new Node(pagePtr);
+    Node* node = new Node(pagePtr);
     Node* temp = nullptr;
     if (this->size == this->capacity) {
-        temp = popLRU(this->tail->getPrev()); // tail->prev is the LRU node
+        Node* target = this->tail->getPrev(); // tail->prev is the LRU node
+        while (target->getPage()->getPinned()) {
+            if (target == this->head) return nullptr;
+            target = target->getPrev();
+        }
+        temp = popLRU(target);
     }
     pushMRU(node);
     return temp;

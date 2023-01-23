@@ -23,6 +23,7 @@ public:
 
     // Return if the page is dirty
     bool getDirty();
+    bool getPinned();
 
     // Mark the page as dirty if the page is modified in buffer, but not written to disk, then we
     // need to mark the page as dirty.

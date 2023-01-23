@@ -38,6 +38,10 @@ bool Page :: getDirty() {
     return this->isDirty;
 }
 
+bool Page :: getPinned() {
+    return this->isPinned;
+}
+
 void Page :: markDirty() {
     this->isDirty = true;
 }
