@@ -42,6 +42,15 @@ public:
 	// un-pins the specified page
 	void unpin (MyDB_PageHandle unpinMe);
 
+    // insert a unpinned page into the LRU
+    void insertLRU();
+
+    // Read the requested data from the disk into a chunk of buffer memory
+    void readDisk(MyDB_TablePtr whichTable, long i);
+
+    // Read the modified data on the buffer back to the disk
+    void writeDisk(MyDB_TablePtr whichTable, long i);
+
 	// creates an LRU buffer manager... params are as follows:
 	// 1) the size of each page is pageSize 
 	// 2) the number of pages managed by the buffer manager is numPages;
@@ -60,9 +69,9 @@ private:
     size_t pageSize;
     string tempFile;
 
-    // key:pair<tableName, pageId>
-    // val = A pointer to the page object
-    std::unordered_map<std::pair<string, long>, Page*> pageMap;
+    // key: tableName_pageId
+    // val: A pointer to the page object
+    unordered_map<string, Page*> pageMap;
 
     // Apply LRU policy to maintain buffer pool
     LRU lru = LRU(0);
@@ -73,6 +82,10 @@ private:
 
     // Store the chunkId in which the chunk of the buffer pool is free
     set<size_t> chunkIds;
+
+    // key: storageLoc/tableName
+    // val: file descriptor
+    unordered_map<string, int> fileMap;
 
 };
 

@@ -15,7 +15,7 @@ using namespace std;
 // Return a handle to the page with the given Table and pageId => Not anonymous
 MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
     // TODO: make_pair error
-    auto key = make_pair(tablePtr->getName(), i);
+    auto key = tablePtr->getName() + to_string(i);
 
     // If the page is already in the buffer
     if (pageMap.find(key) != pageMap.end()){
@@ -93,6 +93,75 @@ void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
     unpinMe->getPagePtr()->unpin();
 
     return;
+}
+
+void MyDB_BufferManager :: insertLRU (Page *pagePtr) {
+    lru.insert(pagePtr);
+
+    return;
+}
+
+void MyDB_BufferManager :: readDisk(Page *pagePtr) {
+    MyDB_TablePtr whichTable = pagePtr->getTablePtr();
+    long pageId = pagePtr->getPageId();
+    char* bufferPtr = pagePtr->getBufferPtr();
+
+    if (whichTable != nullptr){ // if not anonymous
+        string key = whichTable->getStorageLoc() + "/" + whichTable->getName();
+        int fd = -1;
+
+        // if the file descriptor is exist, then read the page from disk
+        // Maybe need "errno != EBADF";
+        if (this->fileMap.find(key) == this->fileMap.end() && fcntl(this->fileMap[key], F_GETFL) != -1) {
+            fd = this->fileMap.find(key);
+        }
+        else{
+            //if the file descriptor is not exist, then open it
+            fd = open(key.c_str(), O_RDONLY | O_CREAT); // (1) Read only (2) Create when not exist
+        }
+
+        // To set file pointer to the  pageSize * i byte in the file
+        lseek(fd, this->pageSize * pageId, SEEK_SET)
+
+        // Read the data from disk to buffer memory
+        read(fd, bufferPtr, this->pageSize);
+    }
+
+    else{
+        //TODO: address anonymous case
+    }
+}
+
+void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
+    MyDB_TablePtr whichTable = pagePtr->getTablePtr();
+    long pageId = pagePtr->getPageId();
+    char* bufferPtr = pagePtr->getBufferPtr();
+
+    if (whichTable != nullptr){ // if not anonymous
+        string key = whichTable->getStorageLoc() + "/" + whichTable->getName();
+        int fd = -1;
+
+        // if the file descriptor is exist, then read the page from disk
+        // Maybe need "errno != EBADF";
+        if (this->fileMap.find(key) == this->fileMap.end() && fcntl(this->fileMap[key], F_GETFL) != -1) {
+            fd = this->fileMap.find(key);
+        }
+        else{
+            //if the file descriptor is not exist, then open it
+            fd = open(key.c_str(), O_RDONLY | O_CREAT); // (1) Read only (2) Create when not exist
+        }
+
+        // To set file pointer to the  pageSize * i byte in the file
+        lseek(fd, this->pageSize * pageId, SEEK_SET)
+
+        // Write the data from disk to buffer memory
+        // write(file to be written, buffer, size)
+        write(fd, bufferPtr, this->pageSize);
+    }
+
+    else{
+        //TODO: address anonymous case
+    }
 }
 
 MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, string tempFile) {
