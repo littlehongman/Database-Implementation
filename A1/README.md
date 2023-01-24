@@ -5,3 +5,4 @@
 2. How to update LRU by page pointer <br>
    (if not pinned, how to update LRU order)
 3. How to allocate chuckID
+4. Where to put logic (getPage vs. getBytes)
