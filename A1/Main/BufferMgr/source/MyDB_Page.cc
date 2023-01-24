@@ -11,6 +11,8 @@ Page :: Page() {
     this->tablePtr = nullptr;
     this->pageId = -1;
 
+    this->bufferPtr = nullptr;
+
     this->isDirty = false;
     this->isPinned = false;
 
@@ -20,6 +22,8 @@ Page :: Page() {
 Page :: Page(MyDB_TablePtr tablePtr, long i) {
     this->tablePtr = tablePtr;
     this->pageId = i;
+
+    this->bufferPtr = nullptr;
 
     this->isDirty = false;
     this->isPinned = false;
@@ -35,12 +39,20 @@ long Page :: getPageId() {
     return this->pageId;
 }
 
+char* Page :: getBufferPtr() {
+    return this->bufferPtr;
+}
+
 bool Page :: getDirty() {
     return this->isDirty;
 }
 
 bool Page :: getPinned() {
     return this->isPinned;
+}
+
+long Page :: getReferenceCount() {
+    return this->referenceCount;
 }
 
 void Page :: markDirty() {

@@ -22,9 +22,15 @@ public:
     // Return the page Id of the page
     long getPageId();
 
+    // Return pointer to the buffer memory
+    char* getBufferPtr();
+
     // Return if the page is dirty
     bool getDirty();
     bool getPinned();
+
+    // Return the reference count of the page
+    long getReferenceCount();
 
     // Mark the page as dirty if the page is modified in buffer, but not written to disk, then we
     // need to mark the page as dirty.
@@ -60,6 +66,9 @@ private:
     // Absolute address of the page
     MyDB_TablePtr tablePtr;
     long pageId;
+
+    // Pointer to specific chunk of buffer memory
+    char* bufferPtr;
 
     // Other attributes of the page
     bool isDirty;
