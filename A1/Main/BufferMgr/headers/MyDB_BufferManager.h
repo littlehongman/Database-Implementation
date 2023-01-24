@@ -74,7 +74,7 @@ private:
     unordered_map<string, Page*> pageMap;
 
     // Apply LRU policy to maintain buffer pool
-    LRU lru = LRU(0);
+    LRU* lru;
 
     // The actual space for the buffer pool
     // buffer will point to the beginning of the buffer pool
@@ -87,6 +87,11 @@ private:
     // val: file descriptor
     unordered_map<string, int> fileMap;
 
+    void insertLRU(Page *pagePtr);
+
+    void readDisk(Page *pagePtr);
+
+    void writeDisk(Page *pagePtr);
 };
 
 #endif

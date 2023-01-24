@@ -35,7 +35,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
             MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
 
             // Apply LRU policy to the page
-            lru.insert(newPagePtr);
+            lru->insert(newPagePtr);
 
             // Store the pagePtr in the unordered_map
             pageMap[key] = newPagePtr;
@@ -51,7 +51,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
 
             // Apply LRU policy to the page
             // TODO: get the pagePtr that is evicted
-            lru.insert(newPagePtr);
+            lru->insert(newPagePtr);
 
             // Store the pagePtr in the unordered_map
             pageMap[key] = newPagePtr;
@@ -69,7 +69,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
     Page *newPagePtr = new Page();
     MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
 
-    lru.insert(newPagePtr);
+    lru->insert(newPagePtr);
 
 
 	return handle;
@@ -96,7 +96,7 @@ void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
 }
 
 void MyDB_BufferManager :: insertLRU (Page *pagePtr) {
-    lru.insert(pagePtr);
+    lru->insert(pagePtr);
 
     return;
 }
@@ -173,7 +173,7 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
     // TODO: WHY CAST THE MEMORY TO CHAR*?
     buffer = (char *)malloc(pageSize * numPages);
 
-    lru = LRU(numPages);
+    lru = new LRU(numPages);
 
     // Initialize the set of chunkIds
     for (int i = 0; i < numPages; i++){

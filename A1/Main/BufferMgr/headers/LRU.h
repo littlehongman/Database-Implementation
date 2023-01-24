@@ -13,6 +13,8 @@ public:
 
     Node(Page *pagePtr, Node *prev, Node *next);
 
+    ~Node(); // TODO: Node destructor
+
     Page *getPage();
 
     Node *getPrev();
@@ -32,6 +34,8 @@ private:
 class LRU {
 public:
     explicit LRU(size_t numPages);
+
+    ~LRU(); // TODO: LRU destructor
 
     Node* popLRU(Node *node); // helper function
 

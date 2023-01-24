@@ -10,7 +10,8 @@ class Page {
 
 public:
     Page();
-    ~Page();
+
+    ~Page(); // TODO: Page destructor
 
     // 1. Set the pageSize of the page 2. Set isDirty to false 3. Set isPinned to false 4. Set the pageData to NULL
 

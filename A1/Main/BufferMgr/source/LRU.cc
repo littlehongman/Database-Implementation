@@ -45,7 +45,11 @@ LRU :: LRU(size_t numPages) {
     this->capacity = numPages;
 }
 
-Node* LRU :: popLRU(Node* node) {
+//LRU::~LRU() {
+
+//}
+
+Node* LRU :: popLRU(Node* node) { // TODO: Need to call delete on the node
     if (this->size == 0) {
         return nullptr;
     }
