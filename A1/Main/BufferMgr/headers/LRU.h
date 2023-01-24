@@ -31,7 +31,7 @@ private:
 
 class LRU {
 public:
-    LRU(size_t numPages);
+    explicit LRU(size_t numPages);
 
     LRU();
 

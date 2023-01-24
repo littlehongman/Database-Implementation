@@ -96,15 +96,15 @@ void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
 }
 
 MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, string tempFile) {
-    numPages = numPages;
-    pageSize = pageSize;
-    tempFile = tempFile;
+    this->numPages = numPages;
+    this->pageSize = pageSize;
+    this->tempFile = tempFile;
 
     // Allocate memory for the whole buffer
     // TODO: WHY CAST THE MEMORY TO CHAR*?
     buffer = (char *)malloc(pageSize * numPages);
 
-//    lru = LRU(numPages);
+    lru = LRU(numPages);
 
     // Initialize the set of chunkIds
     for (int i = 0; i < numPages; i++){
