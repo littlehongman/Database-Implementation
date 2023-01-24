@@ -79,7 +79,10 @@ void MyDB_BufferManager :: isFull(){
 
 char* MyDB_BufferManager :: allocateChunk(){
     if (this->chunkPointers.size() != 0){
-        return this->chunkPointers.pop_back();
+        char* bufferPtr = this->chunkPointers.back();
+        this->chunkPointers.pop_back();
+
+        return bufferPtr;
     }
 
     else{
@@ -120,7 +123,7 @@ void MyDB_BufferManager :: readDisk(Page *pagePtr) {
         }
         else{
             //if the file descriptor is not exist, then open it
-            fd = open(key.c_str(), O_RDONLY | O_CREAT); // (1) Read only (2) Create when not exist
+            fd = open(key.c_str(), O_RDONLY | O_CREAT | O_FSYNC); // (1) Read only (2) Create when not exist
         }
 
         // To set file pointer to the  pageSize * i byte in the file
