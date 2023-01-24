@@ -9,6 +9,7 @@
 // page handles are basically smart pointers
 using namespace std;
 class MyDB_BufferManager;
+class MyDB_PageHandleBase;
 typedef shared_ptr <MyDB_PageHandleBase> MyDB_PageHandle;
 // share_ptr reference: https://www.educative.io/answers/shared-pointers-in-cpp
 
