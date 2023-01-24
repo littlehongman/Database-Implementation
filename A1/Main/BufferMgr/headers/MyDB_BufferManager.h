@@ -7,6 +7,8 @@
 #include <queue>
 #include <unordered_map>
 #include "MyDB_Page.h"
+#include "LRU.h"
+#include <set>
 
 using namespace std;
 

@@ -2,8 +2,9 @@
 #ifndef PAGE_H
 #define PAGE_H
 
-using namespace std;
 #include "MyDB_Table.h"
+
+using namespace std;
 
 class Page {
 

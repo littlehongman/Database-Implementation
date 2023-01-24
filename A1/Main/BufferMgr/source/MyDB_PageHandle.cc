@@ -12,14 +12,14 @@ void *MyDB_PageHandleBase :: getBytes () {
 void MyDB_PageHandleBase :: wroteBytes () {
 }
 
-Page* getPagePtr(){
+Page* MyDB_PageHandleBase :: getPagePtr() {
     return this->pagePtr;
 }
 
 MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
 }
 
-MyDB_PageHandle :: MyDB_PageHandle (Page* pagePtr) {
+MyDB_PageHandleBase :: MyDB_PageHandleBase (Page* pagePtr) {
     pagePtr = pagePtr;
     pagePtr->increaseReferenceCount();
 }

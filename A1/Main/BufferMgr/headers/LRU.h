@@ -3,6 +3,8 @@
 #define LRU_H
 
 
+#include "MyDB_Page.h"
+
 // Wrapper for a page
 class Node {
 public:
@@ -30,6 +32,8 @@ private:
 class LRU {
 public:
     LRU(size_t numPages);
+
+    LRU();
 
     Node* popLRU(Node *node); // helper function
 

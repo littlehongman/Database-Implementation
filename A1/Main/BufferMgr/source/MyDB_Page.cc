@@ -2,9 +2,10 @@
 #ifndef PAGE_C
 #define PAGE_C
 
-using namespace std;
 
-#include "MyDB_Table.h"
+#include "MyDB_Page.h"
+
+using namespace std;
 
 Page :: Page() {
     this->tablePtr = nullptr;
