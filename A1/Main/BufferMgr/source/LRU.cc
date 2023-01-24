@@ -89,12 +89,5 @@ Node* LRU :: insert(Page* pagePtr) {
     return temp;
 }
 
-LRU::LRU() {
-    this->head = new Node(nullptr);
-    this->tail = new Node(nullptr);
-    this->head->setNext(tail); // head->next = tail;
-    this->tail->setPrev(head); // tail->prev = head;
-    this->size = 0;
-}
 
 #endif

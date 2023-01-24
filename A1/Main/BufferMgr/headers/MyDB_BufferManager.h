@@ -65,7 +65,7 @@ private:
     std::unordered_map<std::pair<string, long>, Page*> pageMap;
 
     // Apply LRU policy to maintain buffer pool
-    LRU lru;
+    LRU lru = LRU(0);
 
     // The actual space for the buffer pool
     // buffer will point to the beginning of the buffer pool

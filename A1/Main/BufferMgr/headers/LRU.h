@@ -33,8 +33,6 @@ class LRU {
 public:
     explicit LRU(size_t numPages);
 
-    LRU();
-
     Node* popLRU(Node *node); // helper function
 
     void pushMRU(Node *node); // helper function
