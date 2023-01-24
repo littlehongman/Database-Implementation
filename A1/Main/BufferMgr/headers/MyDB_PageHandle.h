@@ -4,6 +4,7 @@
 
 #include <memory>
 #include "MyDB_Page.h"
+#include "MyDB_BufferManager.h"
 
 // page handles are basically smart pointers
 using namespace std;
@@ -41,12 +42,15 @@ public:
     MyDB_PageHandleBase(Page *pagePtr);
 
 
-
-
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS
 
 private:
     Page *pagePtr;
+
+    // Reference to buffer manager
+    // (1) Access the buffer memory
+    // (2) Access the LRU list
+    MyDB_BufferManager *bufferManagerPtr;
 
 };
 
