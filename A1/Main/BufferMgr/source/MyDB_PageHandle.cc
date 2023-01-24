@@ -6,7 +6,7 @@
 #include "MyDB_PageHandle.h"
 
 void *MyDB_PageHandleBase :: getBytes () {
-    auto bufferPtr = this->pagePtr->getBufferPtr();
+    char* bufferPtr = this->pagePtr->getBufferPtr();
 
     if (bufferPtr != nullptr) {
         // TODO: update the LRU order
@@ -15,18 +15,21 @@ void *MyDB_PageHandleBase :: getBytes () {
         return bufferPtr;
     }
     else{ // Read the page from disk
-        if (this->bufferManagerPtr->isFull()){
-            // TODO: evict a page from the LRU
-            // TODO: update the LRU order
-        }
-        else{
-            // TODO: allocate a new chunk of memory
-            // TODO: update the LRU order
-        }
+
+        // allocate a new chunk of memory
+        bufferPtr = allocateChunk();
+
+        // set the buffer pointer to the page
+        this->pagePtr->setBufferPtr(bufferPtr);
+
+        // Read the page from disk
+        this->bufferMgr->readDisk(this->pagePtr);
+
+        // TODO: update the LRU order
+
+        return bufferPtr;
     }
 
-
-	return nullptr;
 }
 
 void MyDB_PageHandleBase :: wroteBytes () {
@@ -47,7 +50,10 @@ MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
             this->pagePtr->unpin();
         }
         else{
-            // if the page is anonymous, then we delete it
+            // if the page is anonymous, memory is automatically returned
+            this->bufferManagerPtr->reclaimChunk(this->pagePtr->getBufferPtr());
+
+            // we delete it
             delete this->pagePtr;
         }
 
@@ -56,9 +62,11 @@ MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
 
 }
 
-MyDB_PageHandleBase :: MyDB_PageHandleBase (Page* pagePtr) {
-    pagePtr = pagePtr;
-    pagePtr->increaseReferenceCount();
+MyDB_PageHandleBase :: MyDB_PageHandleBase (Page* pagePtr, MyDB_BufferManager *bufferManagerPtr) {
+    this->pagePtr = pagePtr;
+    this->bufferManagerPtr = bufferManagerPtr;
+
+    this->pagePtr->increaseReferenceCount();
 }
 
 #endif

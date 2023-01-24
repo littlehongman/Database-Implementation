@@ -26,6 +26,9 @@ public:
     // Return pointer to the buffer memory
     char* getBufferPtr();
 
+    // Set the buffer pointer to the page
+    void setBufferPtr(char* bufferPtr);
+
     // Return if the page is dirty
     bool getDirty();
     bool getPinned();

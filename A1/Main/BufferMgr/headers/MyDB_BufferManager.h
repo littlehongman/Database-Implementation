@@ -51,6 +51,15 @@ public:
     // Read the modified data on the buffer back to the disk
     void writeDisk(Page *pagePtr);
 
+    // Check if the buffer pool is full
+    bool isFull();
+
+    // Allocate a chunk from the buffer memory
+    char* allocateChunk();
+
+    // Evict a chunk of buffer memory
+    void reclaimChunk(char* chunkPtr);
+
 	// creates an LRU buffer manager... params are as follows:
 	// 1) the size of each page is pageSize 
 	// 2) the number of pages managed by the buffer manager is numPages;

@@ -9,6 +9,7 @@
 #include <memory>
 #include "MyDB_Page.h"
 #include <unistd.h>
+#include "LRU.h"
 #include <fcntl.h>
 
 
@@ -21,7 +22,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
     // If the page is already in the buffer
     if (pageMap.find(key) != pageMap.end()){
         Page *pagePtr = pageMap[key];
-        MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(pagePtr);
+        MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(pagePtr, this);
 
         // TODO: update the LRU order
         //TODO: think if accessTime is needed
@@ -30,45 +31,21 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
     }
     //  If the page is not in the buffer
     else{
-        // If the buffer pool is not full
-        if (pageMap.size() != this->numPages){
-            Page *newPagePtr = new Page(tablePtr, i);
-            MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
+        Page *newPagePtr = new Page(tablePtr, i);
+        MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr, this);
 
-//            // Apply LRU policy to the page
-//            lru->insert(newPagePtr);
+        // Store the pagePtr in the unordered_map
+        pageMap[key] = newPagePtr;
 
-            // Store the pagePtr in the unordered_map
-            pageMap[key] = newPagePtr;
+        return newPagePtr;
 
-            // TODO: update the LRU order
-
-            return nullptr;
-        }
-        // If the buffer pool is full
-        else{
-            Page *newPagePtr = new Page(tablePtr, i);
-            MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
-
-            // Apply LRU policy to the page
-            // TODO: get the pagePtr that is evicted
-//            lru->insert(newPagePtr);
-
-            // Store the pagePtr in the unordered_map
-            pageMap[key] = newPagePtr;
-
-            // TODO: update the LRU order
-            // TODO: Remove the evicted page from the unordered_map
-
-            return handle;
-        }
     }
 }
 
 // Return an anonymous page -> No need to track with pageMap
 MyDB_PageHandle MyDB_BufferManager :: getPage () {
     Page *newPagePtr = new Page();
-    MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
+    MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr, this);
 
 
 	return handle;
@@ -95,6 +72,37 @@ void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
 void MyDB_BufferManager :: insertLRU (Page *pagePtr) {
     lru->insert(pagePtr);
 }
+
+void MyDB_BufferManager :: isFull(){
+    return this->chunkPointers.size() == 0;
+}
+
+char* MyDB_BufferManager :: allocateChunk(){
+    if (this->chunkPointers.size() != 0){
+        return this->chunkPointers.pop_back();
+    }
+
+    else{
+        // TODO: get a Node from the LRU
+        Node* evictNode = this->lru->evict();
+        Page* evictPage = evictNode->getPagePtr();
+
+        // If the page is dirty, then we write it to disk
+        if (evictPage->isDirty()){
+            this->writeDisk(evictPage);
+        }
+
+        char* bufferPtr = evictPage->getBufferPtr();
+        evictPage->setBufferPtr(nullptr);
+
+        return bufferPtr;
+    }
+}
+
+void MyDB_BufferManager :: reclaimChunk(char* chunkPtr){
+    this->chunkPointers.push_back(chunkPtr);
+}
+
 
 void MyDB_BufferManager :: readDisk(Page *pagePtr) {
     MyDB_TablePtr whichTable = pagePtr->getTablePtr();

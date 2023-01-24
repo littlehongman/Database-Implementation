@@ -15,7 +15,7 @@ public:
 
     ~Node(); // TODO: Node destructor
 
-    Page *getPage();
+    Page *getPagePtr();
 
     Node *getPrev();
 

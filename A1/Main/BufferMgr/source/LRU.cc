@@ -16,7 +16,7 @@ Node :: Node(Page* pagePtr, Node* prev, Node* next) {
     this->next = next;
 }
 
-Page* Node :: getPage() {
+Page* Node :: getPagePtr() {
     return this->pagePtr;
 }
 

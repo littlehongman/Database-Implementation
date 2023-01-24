@@ -43,6 +43,10 @@ char* Page :: getBufferPtr() {
     return this->bufferPtr;
 }
 
+void Page :: setBufferPtr(char* bufferPtr) {
+    this->bufferPtr = bufferPtr;
+}
+
 bool Page :: getDirty() {
     return this->isDirty;
 }
