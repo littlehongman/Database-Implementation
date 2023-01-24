@@ -80,8 +80,8 @@ private:
     // buffer will point to the beginning of the buffer pool
     char *buffer;
 
-    // Store the chunkId in which the chunk of the buffer pool is free
-    set<size_t> chunkIds;
+    // Store the chunk pointers in which the chunk of the buffer pool is free
+    vector<size_t> chunkPointers;
 
     // key: storageLoc/tableName
     // val: file descriptor

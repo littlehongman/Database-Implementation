@@ -16,7 +16,6 @@ using namespace std;
 
 // Return a handle to the page with the given Table and pageId => Not anonymous
 MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
-    // TODO: make_pair error
     auto key = tablePtr->getName() + to_string(i);
 
     // If the page is already in the buffer
@@ -36,8 +35,8 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
             Page *newPagePtr = new Page(tablePtr, i);
             MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
 
-            // Apply LRU policy to the page
-            lru->insert(newPagePtr);
+//            // Apply LRU policy to the page
+//            lru->insert(newPagePtr);
 
             // Store the pagePtr in the unordered_map
             pageMap[key] = newPagePtr;
@@ -53,7 +52,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
 
             // Apply LRU policy to the page
             // TODO: get the pagePtr that is evicted
-            lru->insert(newPagePtr);
+//            lru->insert(newPagePtr);
 
             // Store the pagePtr in the unordered_map
             pageMap[key] = newPagePtr;
@@ -70,8 +69,6 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
 MyDB_PageHandle MyDB_BufferManager :: getPage () {
     Page *newPagePtr = new Page();
     MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr);
-
-    lru->insert(newPagePtr);
 
 
 	return handle;
@@ -169,13 +166,13 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 
     // Allocate memory for the whole buffer
     // TODO: WHY CAST THE MEMORY TO CHAR*?
-    buffer = (char *)malloc(pageSize * numPages);
+    this->buffer = (char *)malloc(pageSize * numPages);
 
-    lru = new LRU(numPages);
+    this->lru = new LRU(numPages);
 
-    // Initialize the set of chunkIds
+    // Initialize the vector of chunk starting pointers
     for (int i = 0; i < numPages; i++){
-        chunkIds.insert(i);
+        chunkPointers.push_back(this->buffer + i * pageSize);
     }
 }
 
