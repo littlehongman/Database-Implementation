@@ -9,6 +9,7 @@
 #include <memory>
 #include "MyDB_Page.h"
 #include <unistd.h>
+#include <fcntl.h>
 
 
 using namespace std;
@@ -118,7 +119,7 @@ void MyDB_BufferManager :: readDisk(Page *pagePtr) {
         }
 
         // To set file pointer to the  pageSize * i byte in the file
-        lseek(fd, this->pageSize * pageId, SEEK_SET)
+        lseek(fd, this->pageSize * pageId, SEEK_SET);
 
         // Read the data from disk to buffer memory
         read(fd, bufferPtr, this->pageSize);
@@ -149,7 +150,7 @@ void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
         }
 
         // To set file pointer to the  pageSize * i byte in the file
-        lseek(fd, this->pageSize * pageId, SEEK_SET)
+        lseek(fd, this->pageSize * pageId, SEEK_SET);
 
         // Write the data from disk to buffer memory
         // write(file to be written, buffer, size)
