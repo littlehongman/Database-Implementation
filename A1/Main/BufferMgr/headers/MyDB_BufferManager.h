@@ -87,11 +87,6 @@ private:
     // val: file descriptor
     unordered_map<string, int> fileMap;
 
-    void insertLRU(Page *pagePtr);
-
-    void readDisk(Page *pagePtr);
-
-    void writeDisk(Page *pagePtr);
 };
 
 #endif
