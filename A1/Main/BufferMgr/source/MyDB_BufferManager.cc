@@ -92,14 +92,10 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
 
 void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
     unpinMe->getPagePtr()->unpin();
-
-    return;
 }
 
 void MyDB_BufferManager :: insertLRU (Page *pagePtr) {
     lru->insert(pagePtr);
-
-    return;
 }
 
 void MyDB_BufferManager :: readDisk(Page *pagePtr) {

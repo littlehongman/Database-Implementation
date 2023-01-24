@@ -43,13 +43,13 @@ public:
 	void unpin (MyDB_PageHandle unpinMe);
 
     // insert a unpinned page into the LRU
-    void insertLRU();
+    void insertLRU(Page *pagePtr);
 
     // Read the requested data from the disk into a chunk of buffer memory
-    void readDisk(MyDB_TablePtr whichTable, long i);
+    void readDisk(Page *pagePtr);
 
     // Read the modified data on the buffer back to the disk
-    void writeDisk(MyDB_TablePtr whichTable, long i);
+    void writeDisk(Page *pagePtr);
 
 	// creates an LRU buffer manager... params are as follows:
 	// 1) the size of each page is pageSize 
