@@ -38,7 +38,7 @@ Page* MyDB_PageHandleBase :: getPagePtr() {
 }
 
 MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
-    this->pagePtr->decreferenceCount();
+    this->pagePtr->decreaseReferenceCount();
 
     if (this->pagePtr->getReferenceCount() == 0) {
         // if the page is not anonymous, then we push it to the LRU
