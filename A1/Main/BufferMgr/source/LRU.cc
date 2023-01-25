@@ -28,69 +28,100 @@ Node* Node :: getNext() {
     return this->next;
 }
 
-void Node :: setPrev(Node* prev) {
-    this->prev = prev;
+void Node :: setPrev(Node* prv) {
+    this->prev = prv;
 }
 
-void Node :: setNext(Node* next) {
-    this->next = next;
+void Node :: setNext(Node* nxt) {
+    this->next = nxt;
 }
 
-LRU :: LRU(size_t numPages) {
+Node::~Node() {
+    this->pagePtr = nullptr;
+    this->prev = nullptr;
+    this->next = nullptr;
+}
+
+LRU :: LRU() {
     this->head = new Node(nullptr);
     this->tail = new Node(nullptr);
     this->head->setNext(tail); // head->next = tail;
     this->tail->setPrev(head); // tail->prev = head;
-    this->size = 0;
-    this->capacity = numPages;
 }
 
-//LRU::~LRU() {
+LRU::~LRU() {
+    Node* curr = this->head;
+    while (curr != nullptr) {
+        Node* temp = curr;
+        curr = curr->getNext();
+        delete temp;
+    }
+    this->head = nullptr;
+    this->tail = nullptr;
+}
 
-//}
+void LRU::update(Page* pagePtr) {
+    if (this->NodeMap.find(pagePtr) == this->NodeMap.end()) { // not in the map
+        Node* node = new Node(pagePtr);
+        // insert to the head
+        Node* next = this->head->getNext(); // next = head->next;
+        this->head->setNext(node); // head->next = node;
+        node->setPrev(this->head); // node->prev = head;
+        node->setNext(next); // node->next = next;
+        next->setPrev(node); // next->prev = node;
+        this->NodeMap[pagePtr] = node;
+    } else { // in the map
+        Node* node = this->NodeMap[pagePtr]; // get the node
+        // remove the node from the list
+        Node* prev = node->getPrev(); // prev = node->prev;
+        Node* next = node->getNext(); // next = node->next;
+        prev->setNext(next); // prev->next = next;
+        next->setPrev(prev); // next->prev = prev;
+        // add the node to the head
+        Node* nextHead = this->head->getNext();
+        this->head->setNext(node);
+        node->setPrev(this->head);
+        node->setNext(nextHead);
+        nextHead->setPrev(node);
+    }
+}
 
-Node* LRU :: popLRU(Node* node) { // TODO: Need to call delete on the node
-    if (this->size == 0) {
+Page* LRU::getEvictedPage() {
+    Node* last = this->tail->getPrev(); // last = tail->prev;
+    if (last == this->head) { // empty list
         return nullptr;
+    } else {
+        // remove the last node
+        Node* prev = last->getPrev(); // prev = last->prev;
+        prev->setNext(this->tail); // prev->next = tail;
+        this->tail->setPrev(prev); // tail->prev = prev;
+        last->setNext(nullptr); // last->next = nullptr;
+        last->setPrev(nullptr); // last->prev = nullptr;
+        // remove the last node from the map
+        this->NodeMap.erase(last->getPagePtr()); // remove the node from the map
+        // return the page
+        Page* pagePtr = last->getPagePtr();
+        delete last;
+        return pagePtr;
     }
-    Node* prev = node->getPrev();
-    Node* next = node->getNext();
-    prev->setNext(next);
-    next->setPrev(prev);
-
-    node->setPrev(nullptr); // node->prev = nullptr;
-    node->setNext(nullptr); // node->next = nullptr;
-    // TODO: do something with the deleted node
-    size--;
-    return node;
 }
 
-void LRU :: pushMRU(Node* node) {
-    node->setNext(this->head->getNext()); // node->next = head->next;
-    node->setPrev(this->head); // node->prev = head;
-    this->head->getNext()->setPrev(node); // head->next->prev = node;
-    this->head->setNext(node); // head->next = node;
-    this->size++;
-}
-
-void LRU :: updateMRU(Node* node) { // Node is already in cache, just update it
-    popLRU(node);
-    pushMRU(node);
-}
-
-Node* LRU :: insert(Page* pagePtr) {
-    Node* node = new Node(pagePtr);
-    Node* temp = nullptr;
-    if (this->size == this->capacity) {
-        Node* target = this->tail->getPrev(); // tail->prev is the LRU node
-        while (target->getPagePtr()->getPinned()) {
-            if (target == this->head) return nullptr;
-            target = target->getPrev();
-        }
-        temp = popLRU(target);
+bool LRU::removeNode(Page *pagePtr) {
+    if (this->NodeMap.find(pagePtr) == this->NodeMap.end()) { // not in the map
+        return false;
+    } else { // in the map
+        Node* node = this->NodeMap[pagePtr]; // get the node
+        // remove the node from the list
+        Node* prev = node->getPrev(); // prev = node->prev;
+        Node* next = node->getNext(); // next = node->next;
+        prev->setNext(next); // prev->next = next;
+        next->setPrev(prev); // next->prev = prev;
+        // remove the node from the map
+        this->NodeMap.erase(pagePtr); // remove the node from the map
+        // delete the node
+        delete node;
+        return true;
     }
-    pushMRU(node);
-    return temp;
 }
 
 

@@ -4,24 +4,27 @@
 
 
 #include "MyDB_Page.h"
+#include <unordered_map>
+
+using namespace std;
 
 // Wrapper for a page
 class Node {
 public:
 
-    Node(Page *pagePtr);
+    explicit Node(Page *pagePtr);
 
     Node(Page *pagePtr, Node *prev, Node *next);
 
-    ~Node(); // TODO: Node destructor
+    ~Node();
 
-    Page *getPagePtr();
+    Page* getPagePtr();
 
-    Node *getPrev();
+    Node* getPrev();
 
-    Node *getNext();
+    Node* getNext();
 
-    void setPrev(Node *prev);
+    void setPrev(Node *prv);
 
     void setNext(Node *next);
 
@@ -33,24 +36,20 @@ private:
 
 class LRU {
 public:
-    explicit LRU(size_t numPages);
+    explicit LRU();
 
-    ~LRU(); // TODO: LRU destructor
+    ~LRU();
 
-    Node* popLRU(Node *node); // helper function
+    void update(Page* pagePtr);
 
-    void pushMRU(Node *node); // helper function
+    Page* getEvictedPage();
 
-    void updateMRU(Node *node);
-
-    Node* insert(Page *pagePtr);
+    bool removeNode(Page* pagePtr);
 
 private:
     Node *head;
     Node *tail;
-    long size;
-    size_t capacity;
-
+    unordered_map<Page*, Node*> NodeMap;
 };
 
 #endif

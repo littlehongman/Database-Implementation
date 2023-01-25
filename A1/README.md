@@ -1,7 +1,8 @@
 ## Unsolved
 1. How to update LRU by page pointer <br>
    (if not pinned, how to update LRU order)
-
+2. Node destructor and LRU destructor are implemented, but the Node destructor will not call delete on Page*, so the Page* will not be deleted when the Node is deleted. <br>
+   (Potential memory leak)
 
 ## UnFinished
 1. Destructor of BufferManager
