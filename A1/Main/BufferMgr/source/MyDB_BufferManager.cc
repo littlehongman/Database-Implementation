@@ -94,6 +94,8 @@ char* MyDB_BufferManager :: allocateChunk(){
             this->writeDisk(evictPage);
         }
 
+
+
         char* bufferPtr = evictPage->getBufferPtr();
         evictPage->setBufferPtr(nullptr);
 
@@ -103,6 +105,19 @@ char* MyDB_BufferManager :: allocateChunk(){
 
 void MyDB_BufferManager :: reclaimChunk(char* chunkPtr){
     this->chunkPointers.push_back(chunkPtr);
+}
+
+int MyDB_BufferManager ::getTempSlot() {
+    if (this->tempSlots.empty()){
+        int offset = this->slot;
+        this->slot += 1;
+
+        return offset;
+    }
+}
+
+void MyDB_BufferManager ::reclaimTempSlot(int offset) {
+    this->tempSlots.push_back(offset);
 }
 
 
@@ -133,9 +148,22 @@ void MyDB_BufferManager :: readDisk(Page *pagePtr) {
     }
 
     else{
-        //TODO: address anonymous case
+        string key = this->tempFile;
+        int slot = pagePtr->getSlot();
+
+        int fd = open(key.c_str(), O_RDONLY | O_CREAT | O_FSYNC);
+
+        // To set file pointer to the  pageSize * i byte in the file
+        lseek(fd, this->pageSize * slot, SEEK_SET);
+
+        // Write the data from disk to buffer memory
+        // write(file to be written, buffer, size)
+        read(fd, bufferPtr, this->pageSize);
+
+        close(fd);
     }
 }
+
 
 void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
     MyDB_TablePtr whichTable = pagePtr->getTablePtr();
@@ -153,7 +181,7 @@ void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
         }
         else{
             //if the file descriptor is not exist, then open it
-            fd = open(key.c_str(), O_RDONLY | O_CREAT); // (1) Read only (2) Create when not exist
+            fd = open(key.c_str(), O_WRONLY | O_CREAT | O_FSYNC); // (1) Read only (2) Create when not exist
         }
 
         // To set file pointer to the  pageSize * i byte in the file
@@ -166,6 +194,19 @@ void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
 
     else{
         //TODO: address anonymous case
+        string key = this->tempFile;
+        int slot = pagePtr->getSlot();
+
+        int fd = open(key.c_str(), O_WRONLY | O_CREAT | O_FSYNC) ;
+
+        // To set file pointer to the  pageSize * i byte in the file
+        lseek(fd, this->pageSize * slot, SEEK_SET);
+
+        // Write the data from disk to buffer memory
+        // write(file to be written, buffer, size)
+        write(fd, bufferPtr, this->pageSize);
+
+        close(fd);
     }
 }
 

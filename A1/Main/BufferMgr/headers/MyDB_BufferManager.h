@@ -63,6 +63,12 @@ public:
     // Evict a chunk of buffer memory
     void reclaimChunk(char* chunkPtr);
 
+    // get tempOffset
+    int getTempSlot();
+
+    // get the offset of a evicted page
+    void reclaimTempSlot(int offset);
+
 	// creates an LRU buffer manager... params are as follows:
 	// 1) the size of each page is pageSize 
 	// 2) the number of pages managed by the buffer manager is numPages;
@@ -94,6 +100,10 @@ private:
 
     // Store the chunk pointers in which the chunk of the buffer pool is free
     vector<char*> chunkPointers;
+
+    // Store the chunk offsets of the temporary page
+    vector<int> tempSlots;
+    int slot;
 
     // key: storageLoc/tableName
     // val: file descriptor

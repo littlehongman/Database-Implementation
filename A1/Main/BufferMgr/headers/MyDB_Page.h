@@ -55,6 +55,11 @@ public:
     // Decrease the reference count of the page when a page handle base is destroyed.
     void decreaseReferenceCount();
 
+    int getSlot();
+
+    void setSlot(int slot);
+
+
 //    // Increase the pin count when the page is requested. (A query is executed on the page)
 //    void incrementPinCount();
 //
@@ -80,6 +85,9 @@ private:
     bool isDirty;
     bool isPinned;
     long referenceCount;
+
+    // Anonymous slot
+    int slot;
 
     // long pinCount;
 //    std :: time_t lastAccessTime;

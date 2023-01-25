@@ -53,7 +53,7 @@ MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
         }
         else{
             // if the page is anonymous, memory is automatically returned
-            this->bufferManagerPtr->reclaimChunk(this->pagePtr->getBufferPtr());
+            this->bufferManagerPtr->reclaimTempSlot(this->pagePtr->getSlot());
 
             // we delete it
             delete this->pagePtr;

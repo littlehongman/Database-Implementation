@@ -17,6 +17,8 @@ Page :: Page() {
     this->isPinned = false;
 
     this->referenceCount = 0;
+
+    this->slot = -1;
 }
 
 Page :: Page(MyDB_TablePtr tablePtr, long i) {
@@ -29,6 +31,8 @@ Page :: Page(MyDB_TablePtr tablePtr, long i) {
     this->isPinned = false;
 
     this->referenceCount = 0;
+
+    this->slot = -1;
 }
 
 MyDB_TablePtr Page :: getTablePtr() {
@@ -85,6 +89,15 @@ void Page :: decreaseReferenceCount() {
 
 bool Page::getIsDirty() {
     return this->isDirty;
+}
+
+void Page::setSlot(int slot) {
+    this->slot = slot;
+}
+
+int Page::getSlot() {
+    return this->slot;
+
 }
 
 # endif
