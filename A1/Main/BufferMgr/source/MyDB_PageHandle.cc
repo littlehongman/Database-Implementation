@@ -66,6 +66,7 @@ MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
 
 //            // we delete it
             this->bufferManagerPtr->removeFromLRU(this->pagePtr);
+            this->bufferManagerPtr->reclaimChunk(this->pagePtr->getBufferPtr());
             delete this->pagePtr;
             // Because LRU may still point to anonymous page, so we do not need to delete it here
         }
