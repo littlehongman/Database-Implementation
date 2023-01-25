@@ -24,7 +24,7 @@ void *MyDB_PageHandleBase :: getBytes () {
     }
 
     // Use pin to update the LRU order
-    if (!this->pagePtr->getPinned()){
+    if (this->pagePtr->getPinned()){
         this->bufferManagerPtr->removeFromLRU(this->pagePtr);
     }
     else {
@@ -58,6 +58,11 @@ MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
         else{
             // if the page is anonymous, memory is automatically returned
             this->bufferManagerPtr->reclaimTempSlot(this->pagePtr->getSlot());
+
+            if (this->pagePtr->getPinned()){
+                this->pagePtr->unpin();
+                this->bufferManagerPtr->updateLRU(this->pagePtr);
+            }
 
 //            // we delete it
 //            delete this->pagePtr;
