@@ -65,6 +65,11 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
 
 void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
     unpinMe->getPagePtr()->unpin();
+
+    // if not in LRU
+    if (!this->lru->inLRU(unpinMe->getPagePtr())){
+        this->lru->update(unpinMe->getPagePtr());
+    }
 }
 
 void MyDB_BufferManager :: updateLRU (Page *pagePtr) {
