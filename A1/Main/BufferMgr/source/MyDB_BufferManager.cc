@@ -245,7 +245,7 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
     for (auto item: this->pageMap){
         Page* pagePtr = item.second;
 
-        if (pagePtr->getIsDirty()){
+        if (pagePtr->getBufferPtr() != nullptr && pagePtr->getIsDirty()){
             this->writeDisk(pagePtr);
         }
 
