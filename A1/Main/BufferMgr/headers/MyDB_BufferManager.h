@@ -4,13 +4,15 @@
 
 #include "MyDB_PageHandle.h"
 #include "MyDB_Table.h"
-#include <queue>
-#include <unordered_map>
 #include "MyDB_Page.h"
 #include "LRU.h"
-#include <set>
+
+#include <unordered_map>
 
 using namespace std;
+
+class MyDB_PageHandleBase;
+typedef shared_ptr <MyDB_PageHandleBase> MyDB_PageHandle;
 
 class MyDB_BufferManager {
 

@@ -5,6 +5,8 @@
 #include <memory>
 #include "MyDB_PageHandle.h"
 
+class MyDB_BufferManager;
+
 void *MyDB_PageHandleBase :: getBytes () {
     char* bufferPtr = this->pagePtr->getBufferPtr();
 
@@ -23,7 +25,7 @@ void *MyDB_PageHandleBase :: getBytes () {
         this->pagePtr->setBufferPtr(bufferPtr);
 
         // Read the page from disk
-        this->bufferMgr->readDisk(this->pagePtr);
+        this->bufferManagerPtr->readDisk(this->pagePtr);
 
         // TODO: update the LRU order
 

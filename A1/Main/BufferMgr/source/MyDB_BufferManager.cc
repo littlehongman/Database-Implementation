@@ -3,7 +3,6 @@
 #define BUFFER_MGR_C
 
 #include "MyDB_BufferManager.h"
-#include "MyDB_PageHandle.h"
 #include <string>
 #include <ctime>
 #include <memory>
@@ -37,7 +36,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
         // Store the pagePtr in the unordered_map
         pageMap[key] = newPagePtr;
 
-        return newPagePtr;
+        return handle;
 
     }
 }
@@ -73,7 +72,7 @@ void MyDB_BufferManager :: insertLRU (Page *pagePtr) {
     lru->insert(pagePtr);
 }
 
-void MyDB_BufferManager :: isFull(){
+bool MyDB_BufferManager :: isFull(){
     return this->chunkPointers.size() == 0;
 }
 

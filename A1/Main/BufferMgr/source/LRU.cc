@@ -83,7 +83,7 @@ Node* LRU :: insert(Page* pagePtr) {
     Node* temp = nullptr;
     if (this->size == this->capacity) {
         Node* target = this->tail->getPrev(); // tail->prev is the LRU node
-        while (target->getPage()->getPinned()) {
+        while (target->getPagePtr()->getPinned()) {
             if (target == this->head) return nullptr;
             target = target->getPrev();
         }
