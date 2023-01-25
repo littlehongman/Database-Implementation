@@ -24,7 +24,7 @@ void *MyDB_PageHandleBase :: getBytes () {
     }
 
     // Use pin to update the LRU order
-    if (!this->pagePtr->getPinned()){
+    if (this->pagePtr->getPinned()){
         this->bufferManagerPtr->removeFromLRU(this->pagePtr);
     }
     else {

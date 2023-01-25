@@ -187,7 +187,7 @@ void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
 
         // if the file descriptor is exist, then read the page from disk
         // Maybe need "errno != EBADF";
-        if (this->fileMap.find(key) == this->fileMap.end() && fcntl(this->fileMap[key], F_GETFL) != -1) {
+        if (this->fileMap.find(key) != this->fileMap.end() && fcntl(this->fileMap[key], F_GETFL) != -1) {
             fd = this->fileMap[key];
         }
         else{
