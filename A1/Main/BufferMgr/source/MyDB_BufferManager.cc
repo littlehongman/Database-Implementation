@@ -256,7 +256,7 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
 
         delete pagePtr;
     }
-
+    free(this->buffer);
 }
 
 #endif
