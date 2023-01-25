@@ -17,7 +17,7 @@ void *MyDB_PageHandleBase :: getBytes () {
     else{ // Read the page from disk
 
         // allocate a new chunk of memory
-        bufferPtr = allocateChunk();
+        bufferPtr = this->bufferManagerPtr->allocateChunk();
 
         // set the buffer pointer to the page
         this->pagePtr->setBufferPtr(bufferPtr);
