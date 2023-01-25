@@ -5,6 +5,7 @@
 #include "MyDB_BufferManager.h"
 #include <string>
 #include <ctime>
+#include <iostream>
 #include <memory>
 #include "MyDB_Page.h"
 #include <unistd.h>
@@ -16,7 +17,7 @@ using namespace std;
 
 // Return a handle to the page with the given Table and pageId => Not anonymous
 MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
-    auto key = tablePtr->getName() + to_string(i);
+    auto key = tablePtr->getName() + "_" + to_string(i);
 
     // If the page is already in the buffer
     if (pageMap.find(key) != pageMap.end()){
@@ -28,6 +29,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
     //  If the page is not in the buffer
     else{
         Page *newPagePtr = new Page(tablePtr, i);
+
         MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr, this);
 
         // Store the pagePtr in the unordered_map

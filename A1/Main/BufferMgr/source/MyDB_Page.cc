@@ -100,4 +100,8 @@ int Page::getSlot() {
 
 }
 
+Page::~Page() {
+
+}
+
 # endif
