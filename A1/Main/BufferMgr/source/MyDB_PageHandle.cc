@@ -10,13 +10,7 @@ class MyDB_BufferManager;
 void *MyDB_PageHandleBase :: getBytes () {
     char* bufferPtr = this->pagePtr->getBufferPtr();
 
-    if (bufferPtr != nullptr) {
-        // TODO: update the LRU order
-
-        // Return the page from buffer
-        return bufferPtr;
-    }
-    else{ // Read the page from disk
+    if (bufferPtr == nullptr) { // Read the page from disk
 
         // allocate a new chunk of memory
         bufferPtr = this->bufferManagerPtr->allocateChunk();
@@ -27,10 +21,17 @@ void *MyDB_PageHandleBase :: getBytes () {
         // Read the page from disk
         this->bufferManagerPtr->readDisk(this->pagePtr);
 
-        // TODO: update the LRU order
-
-        return bufferPtr;
     }
+
+    // Use pin to update the LRU order
+    if (!this->pagePtr->getPinned()){
+        this->bufferManagerPtr->removeFromLRU(this->pagePtr);
+    }
+    else {
+        this->bufferManagerPtr->updateLRU(this->pagePtr);
+    }
+
+    return bufferPtr;
 
 }
 

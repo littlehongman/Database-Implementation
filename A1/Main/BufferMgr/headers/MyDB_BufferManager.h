@@ -46,7 +46,9 @@ public:
 	void unpin (MyDB_PageHandle unpinMe);
 
     // insert a unpinned page into the LRU
-    void insertLRU(Page *pagePtr);
+    void updateLRU(Page *pagePtr);
+
+    void removeFromLRU(Page *pagePtr);
 
     // Read the requested data from the disk into a chunk of buffer memory
     void readDisk(Page *pagePtr);

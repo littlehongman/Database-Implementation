@@ -23,9 +23,6 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
         Page *pagePtr = pageMap[key];
         MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(pagePtr, this);
 
-        // TODO: update the LRU order
-        //TODO: think if accessTime is needed
-
         return handle;
     }
     //  If the page is not in the buffer
@@ -68,8 +65,12 @@ void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
     unpinMe->getPagePtr()->unpin();
 }
 
-void MyDB_BufferManager :: insertLRU (Page *pagePtr) {
-    lru->insert(pagePtr);
+void MyDB_BufferManager :: updateLRU (Page *pagePtr) {
+    lru->update(pagePtr);
+}
+
+void MyDB_BufferManager :: removeFromLRU (Page *pagePtr) {
+    lru->removeNode(pagePtr);
 }
 
 bool MyDB_BufferManager :: isFull(){
@@ -85,9 +86,8 @@ char* MyDB_BufferManager :: allocateChunk(){
     }
 
     else{
-        // TODO: get a Node from the LRU
-        Node* evictNode = this->lru->evict();
-        Page* evictPage = evictNode->getPagePtr();
+        // Get a Node from the LRU
+        Page* evictPage = this->lru->getEvictedPage();
 
         // If the page is dirty, then we write it to disk
         if (evictPage->getIsDirty()){
@@ -111,6 +111,12 @@ int MyDB_BufferManager ::getTempSlot() {
     if (this->tempSlots.empty()){
         int offset = this->slot;
         this->slot += 1;
+
+        return offset;
+    }
+    else{
+        int offset = this->tempSlots.back();
+        this->tempSlots.pop_back();
 
         return offset;
     }
@@ -219,7 +225,7 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
     // TODO: WHY CAST THE MEMORY TO CHAR*?
     this->buffer = (char *)malloc(pageSize * numPages);
 
-    this->lru = new LRU(numPages);
+    this->lru = new LRU();
 
     // Initialize the vector of chunk starting pointers
     for (int i = 0; i < numPages; i++){
