@@ -83,4 +83,8 @@ void Page :: decreaseReferenceCount() {
     this->referenceCount--;
 }
 
+bool Page::getIsDirty() {
+    return this->isDirty;
+}
+
 # endif

@@ -8,6 +8,7 @@
 #include "LRU.h"
 
 #include <unordered_map>
+#include <vector>
 
 using namespace std;
 
@@ -92,7 +93,7 @@ private:
     char *buffer;
 
     // Store the chunk pointers in which the chunk of the buffer pool is free
-    vector<size_t> chunkPointers;
+    vector<char*> chunkPointers;
 
     // key: storageLoc/tableName
     // val: file descriptor

@@ -41,6 +41,8 @@ public:
     void markDirty();
     void markClean();
 
+    bool getIsDirty();
+
     // Pin the page, if the page is pinned, then it cannot be evicted from buffer pool.
     void pin();
 

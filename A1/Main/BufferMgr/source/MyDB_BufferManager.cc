@@ -90,7 +90,7 @@ char* MyDB_BufferManager :: allocateChunk(){
         Page* evictPage = evictNode->getPagePtr();
 
         // If the page is dirty, then we write it to disk
-        if (evictPage->isDirty()){
+        if (evictPage->getIsDirty()){
             this->writeDisk(evictPage);
         }
 
