@@ -71,6 +71,8 @@ public:
     // get the offset of a evicted page
     void reclaimTempSlot(int offset);
 
+    bool isLRUEmpty();
+
 	// creates an LRU buffer manager... params are as follows:
 	// 1) the size of each page is pageSize 
 	// 2) the number of pages managed by the buffer manager is numPages;

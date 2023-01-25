@@ -48,6 +48,8 @@ public:
 
     bool inLRU(Page *pagePtr);
 
+    bool isEmpty();
+
 private:
     Node *head;
     Node *tail;

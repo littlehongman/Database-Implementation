@@ -93,6 +93,11 @@ char* MyDB_BufferManager :: allocateChunk(){
     }
 
     else{
+
+        if (this->isLRUEmpty()){
+            cout << "No more space in the buffer" << endl;
+            return nullptr;
+        }
         // Get a Node from the LRU
         Page* evictPage = this->lru->getEvictedPage();
 
@@ -247,7 +252,7 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 MyDB_BufferManager :: ~MyDB_BufferManager () {
     delete this->lru;
 
-    for (auto item: this->pageMap){
+    for (const auto& item: this->pageMap){
         Page* pagePtr = item.second;
 
         if (pagePtr->getBufferPtr() != nullptr && pagePtr->getIsDirty()){
@@ -257,6 +262,10 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
         delete pagePtr;
     }
     free(this->buffer);
+}
+
+bool MyDB_BufferManager::isLRUEmpty() {
+    return this->lru->isEmpty();
 }
 
 #endif
