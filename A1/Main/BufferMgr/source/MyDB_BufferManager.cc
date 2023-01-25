@@ -94,10 +94,13 @@ char* MyDB_BufferManager :: allocateChunk(){
             this->writeDisk(evictPage);
         }
 
-
-
         char* bufferPtr = evictPage->getBufferPtr();
         evictPage->setBufferPtr(nullptr);
+
+        // if the page is anonymous, then need to be deleted
+        if (evictPage->getTablePtr() == nullptr){
+            delete evictPage;
+        }
 
         return bufferPtr;
     }
