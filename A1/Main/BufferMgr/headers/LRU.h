@@ -46,6 +46,8 @@ public:
 
     bool removeNode(Page* pagePtr);
 
+    bool inLRU(Page *pagePtr);
+
 private:
     Node *head;
     Node *tail;
