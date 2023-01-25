@@ -1,1 +1,6 @@
 .idea
+.DS_Store
+*/*/*/*/*.o
+*/*/*.dblite
+cmake-build-debug
+# CMakeLists.txt

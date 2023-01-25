@@ -4,11 +4,16 @@
 
 #include "MyDB_PageHandle.h"
 #include "MyDB_Table.h"
-#include <queue>
-#include <unordered_map>
 #include "MyDB_Page.h"
+#include "LRU.h"
+
+#include <unordered_map>
+#include <vector>
 
 using namespace std;
+
+class MyDB_PageHandleBase;
+typedef shared_ptr <MyDB_PageHandleBase> MyDB_PageHandle;
 
 class MyDB_BufferManager {
 
@@ -40,6 +45,32 @@ public:
 	// un-pins the specified page
 	void unpin (MyDB_PageHandle unpinMe);
 
+    // insert a unpinned page into the LRU
+    void updateLRU(Page *pagePtr);
+
+    void removeFromLRU(Page *pagePtr);
+
+    // Read the requested data from the disk into a chunk of buffer memory
+    void readDisk(Page *pagePtr);
+
+    // Read the modified data on the buffer back to the disk
+    void writeDisk(Page *pagePtr);
+
+    // Check if the buffer pool is full
+    bool isFull();
+
+    // Allocate a chunk from the buffer memory
+    char* allocateChunk();
+
+    // Evict a chunk of buffer memory
+    void reclaimChunk(char* chunkPtr);
+
+    // get tempOffset
+    int getTempSlot();
+
+    // get the offset of a evicted page
+    void reclaimTempSlot(int offset);
+
 	// creates an LRU buffer manager... params are as follows:
 	// 1) the size of each page is pageSize 
 	// 2) the number of pages managed by the buffer manager is numPages;
@@ -54,17 +85,31 @@ public:
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS 
 
 private:
-	// YOUR STUFF HERE
     size_t numPages;
     size_t pageSize;
     string tempFile;
 
-    // Use to map pageId to the page in the buffer pool
-    // Can check if the pageId is existed in the buffer pool
-    std::unordered_map<long, Page*> pageMap;
+    // key: tableName_pageId
+    // val: A pointer to the page object
+    unordered_map<string, Page*> pageMap;
 
-    // Actual buffer pool, holding disk pages
-    std::priority_queue<Page> *lruBufferPool;
+    // Apply LRU policy to maintain buffer pool
+    LRU* lru;
+
+    // The actual space for the buffer pool
+    // buffer will point to the beginning of the buffer pool
+    char *buffer;
+
+    // Store the chunk pointers in which the chunk of the buffer pool is free
+    vector<char*> chunkPointers;
+
+    // Store the chunk offsets of the temporary page
+    vector<int> tempSlots;
+    int slot;
+
+    // key: storageLoc/tableName
+    // val: file descriptor
+    unordered_map<string, int> fileMap;
 
 };
 
