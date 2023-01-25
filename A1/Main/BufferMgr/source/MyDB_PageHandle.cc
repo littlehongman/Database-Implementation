@@ -59,6 +59,11 @@ MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
             // if the page is anonymous, memory is automatically returned
             this->bufferManagerPtr->reclaimTempSlot(this->pagePtr->getSlot());
 
+            if (this->pagePtr->getPinned()){
+                this->pagePtr->unpin();
+                this->bufferManagerPtr->updateLRU(this->pagePtr);
+            }
+
 //            // we delete it
 //            delete this->pagePtr;
             // Because LRU may still point to anonymous page, so we do not need to delete it here
