@@ -99,10 +99,10 @@ char* MyDB_BufferManager :: allocateChunk(){
         char* bufferPtr = evictPage->getBufferPtr();
         evictPage->setBufferPtr(nullptr);
 
-        // if the page is anonymous, then need to be deleted
-        if (evictPage->getTablePtr() == nullptr){
-            delete evictPage;
-        }
+//        // if the page is anonymous, then need to be deleted
+//        if (evictPage->getTablePtr() == nullptr){
+//            delete evictPage;
+//        }
 
         return bufferPtr;
     }
@@ -218,6 +218,8 @@ void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
 
         close(fd);
     }
+
+    pagePtr->markClean();
 }
 
 MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, string tempFile) {
@@ -238,6 +240,17 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 }
 
 MyDB_BufferManager :: ~MyDB_BufferManager () {
+    delete this->lru;
+
+    for (auto item: this->pageMap){
+        Page* pagePtr = item.second;
+
+        if (pagePtr->getBufferPtr() != nullptr && pagePtr->getIsDirty()){
+            this->writeDisk(pagePtr);
+        }
+
+        delete pagePtr;
+    }
 
 }
 
