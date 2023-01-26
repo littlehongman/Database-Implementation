@@ -42,7 +42,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
 
 // Return an anonymous page -> No need to track with pageMap
 MyDB_PageHandle MyDB_BufferManager :: getPage () {
-    Page *newPagePtr = new Page();
+    Page *newPagePtr = new Page(this->getTempSlot());
     MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr, this);
 
 
@@ -242,6 +242,8 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
     this->buffer = (char *)malloc(pageSize * numPages);
 
     this->lru = new LRU();
+
+    this->slot = 0;
 
     // Initialize the vector of chunk starting pointers
     for (int i = 0; i < numPages; i++){

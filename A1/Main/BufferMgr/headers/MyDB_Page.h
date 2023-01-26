@@ -9,7 +9,7 @@ using namespace std;
 class Page {
 
 public:
-    Page();
+    Page(int slot);
 
     ~Page(); // TODO: Page destructor
 
