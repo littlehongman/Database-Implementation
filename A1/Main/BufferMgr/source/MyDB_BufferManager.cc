@@ -93,7 +93,6 @@ char* MyDB_BufferManager :: allocateChunk(){
     }
 
     else{
-
         if (this->isLRUEmpty()){
             cout << "No more space in the buffer" << endl;
             return nullptr;
@@ -159,6 +158,7 @@ void MyDB_BufferManager :: readDisk(Page *pagePtr) {
         else{
             //if the file descriptor is not exist, then open it
             fd = open(key.c_str(), O_RDONLY | O_CREAT | O_FSYNC, 0666); // (1) Read only (2) Create when not exist
+            this->fileMap[key] = fd;
         }
 
         // To set file pointer to the  pageSize * i byte in the file
@@ -166,13 +166,17 @@ void MyDB_BufferManager :: readDisk(Page *pagePtr) {
 
         // Read the data from disk to buffer memory
         read(fd, bufferPtr, this->pageSize);
+
+        close(fd);
     }
 
     else{
         string key = this->tempFile;
         int slot = pagePtr->getSlot();
 
-        int fd = open(key.c_str(), O_RDONLY | O_CREAT | O_FSYNC, 0666);
+        int fd = -1;
+
+        fd = open(key.c_str(), O_RDONLY | O_CREAT | O_FSYNC, 0666);
 
         // To set file pointer to the  pageSize * i byte in the file
         lseek(fd, this->pageSize * slot, SEEK_SET);
@@ -199,6 +203,7 @@ void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
         // Maybe need "errno != EBADF";
         if (this->fileMap.find(key) != this->fileMap.end() && fcntl(this->fileMap[key], F_GETFL) != -1) {
             fd = this->fileMap[key];
+            this->fileMap[key] = fd;
         }
         else{
             //if the file descriptor is not exist, then open it
@@ -211,6 +216,8 @@ void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
         // Write the data from disk to buffer memory
         // write(file to be written, buffer, size)
         write(fd, bufferPtr, this->pageSize);
+
+        close(fd);
     }
 
     else{
@@ -246,7 +253,7 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
     this->slot = 0;
 
     // Initialize the vector of chunk starting pointers
-    for (int i = 0; i < numPages; i++){
+    for (size_t i = 0; i < numPages; i++){
         chunkPointers.push_back(this->buffer + i * pageSize);
     }
 }
@@ -263,7 +270,14 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
 
         delete pagePtr;
     }
+
+    // free buffer memory
     free(this->buffer);
+
+    // rescind all of the file descriptors
+    for (const auto &item: this->fileMap){
+        close(item.second);
+    }
 }
 
 bool MyDB_BufferManager::isLRUEmpty() {
