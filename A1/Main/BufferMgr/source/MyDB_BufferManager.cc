@@ -42,7 +42,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr tablePtr, long i) {
 
 // Return an anonymous page -> No need to track with pageMap
 MyDB_PageHandle MyDB_BufferManager :: getPage () {
-    Page *newPagePtr = new Page();
+    Page *newPagePtr = new Page(this->getTempSlot());
     MyDB_PageHandle handle = make_shared<MyDB_PageHandleBase>(newPagePtr, this);
 
 
@@ -65,6 +65,11 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
 
 void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
     unpinMe->getPagePtr()->unpin();
+
+    // if not in LRU
+    if (!this->lru->inLRU(unpinMe->getPagePtr())){
+        this->lru->update(unpinMe->getPagePtr());
+    }
 }
 
 void MyDB_BufferManager :: updateLRU (Page *pagePtr) {
@@ -88,6 +93,11 @@ char* MyDB_BufferManager :: allocateChunk(){
     }
 
     else{
+
+        if (this->isLRUEmpty()){
+            cout << "No more space in the buffer" << endl;
+            return nullptr;
+        }
         // Get a Node from the LRU
         Page* evictPage = this->lru->getEvictedPage();
 
@@ -99,10 +109,10 @@ char* MyDB_BufferManager :: allocateChunk(){
         char* bufferPtr = evictPage->getBufferPtr();
         evictPage->setBufferPtr(nullptr);
 
-        // if the page is anonymous, then need to be deleted
-        if (evictPage->getTablePtr() == nullptr){
-            delete evictPage;
-        }
+//        // if the page is anonymous, then need to be deleted
+//        if (evictPage->getTablePtr() == nullptr){
+//            delete evictPage;
+//        }
 
         return bufferPtr;
     }
@@ -218,6 +228,8 @@ void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
 
         close(fd);
     }
+
+    pagePtr->markClean();
 }
 
 MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, string tempFile) {
@@ -231,6 +243,8 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 
     this->lru = new LRU();
 
+    this->slot = 0;
+
     // Initialize the vector of chunk starting pointers
     for (int i = 0; i < numPages; i++){
         chunkPointers.push_back(this->buffer + i * pageSize);
@@ -238,7 +252,22 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, stri
 }
 
 MyDB_BufferManager :: ~MyDB_BufferManager () {
+    delete this->lru;
 
+    for (const auto& item: this->pageMap){
+        Page* pagePtr = item.second;
+
+        if (pagePtr->getBufferPtr() != nullptr && pagePtr->getIsDirty()){
+            this->writeDisk(pagePtr);
+        }
+
+        delete pagePtr;
+    }
+    free(this->buffer);
+}
+
+bool MyDB_BufferManager::isLRUEmpty() {
+    return this->lru->isEmpty();
 }
 
 #endif

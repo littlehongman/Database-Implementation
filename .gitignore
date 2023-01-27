@@ -3,4 +3,5 @@
 */*/*/*/*.o
 */*/*.dblite
 cmake-build-debug
+Build/bin
 # CMakeLists.txt

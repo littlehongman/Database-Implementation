@@ -124,5 +124,12 @@ bool LRU::removeNode(Page *pagePtr) {
     }
 }
 
+bool LRU::inLRU(Page *pagePtr) {
+    return this->NodeMap.find(pagePtr) != this->NodeMap.end();
+}
+
+bool LRU::isEmpty() {
+    return this->head->getNext() == this->tail;
+}
 
 #endif

@@ -7,7 +7,7 @@
 
 using namespace std;
 
-Page :: Page() {
+Page :: Page(int slot) {
     this->tablePtr = nullptr;
     this->pageId = -1;
 
@@ -18,7 +18,7 @@ Page :: Page() {
 
     this->referenceCount = 0;
 
-    this->slot = -1;
+    this->slot = slot;
 }
 
 Page :: Page(MyDB_TablePtr tablePtr, long i) {

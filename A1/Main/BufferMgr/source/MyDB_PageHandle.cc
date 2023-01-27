@@ -3,7 +3,11 @@
 #define PAGE_HANDLE_C
 
 #include <memory>
+#include <iostream>
 #include "MyDB_PageHandle.h"
+
+
+using namespace std;
 
 class MyDB_BufferManager;
 
@@ -14,6 +18,11 @@ void *MyDB_PageHandleBase :: getBytes () {
 
         // allocate a new chunk of memory
         bufferPtr = this->bufferManagerPtr->allocateChunk();
+
+        if (bufferPtr == nullptr) {
+            cout << "No more memory available" << endl;
+            return nullptr;
+        }
 
         // set the buffer pointer to the page
         this->pagePtr->setBufferPtr(bufferPtr);
@@ -59,13 +68,17 @@ MyDB_PageHandleBase :: ~MyDB_PageHandleBase () {
             // if the page is anonymous, memory is automatically returned
             this->bufferManagerPtr->reclaimTempSlot(this->pagePtr->getSlot());
 
-            if (this->pagePtr->getPinned()){
-                this->pagePtr->unpin();
-                this->bufferManagerPtr->updateLRU(this->pagePtr);
-            }
+//            if (this->pagePtr->getPinned()){
+//                this->pagePtr->unpin();
+//                this->bufferManagerPtr->updateLRU(this->pagePtr);
+//            }
 
 //            // we delete it
-//            delete this->pagePtr;
+            this->bufferManagerPtr->removeFromLRU(this->pagePtr);
+            if (this->pagePtr->getBufferPtr() != nullptr){
+                this->bufferManagerPtr->reclaimChunk(this->pagePtr->getBufferPtr());
+            }
+            delete this->pagePtr;
             // Because LRU may still point to anonymous page, so we do not need to delete it here
         }
 

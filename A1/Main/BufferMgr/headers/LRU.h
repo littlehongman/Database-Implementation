@@ -46,6 +46,10 @@ public:
 
     bool removeNode(Page* pagePtr);
 
+    bool inLRU(Page *pagePtr);
+
+    bool isEmpty();
+
 private:
     Node *head;
     Node *tail;
