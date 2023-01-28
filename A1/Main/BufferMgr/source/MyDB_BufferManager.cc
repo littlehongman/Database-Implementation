@@ -147,7 +147,7 @@ void MyDB_BufferManager :: readDisk(Page *pagePtr) {
     char* bufferPtr = pagePtr->getBufferPtr();
 
     if (whichTable != nullptr){ // if not anonymous
-        string key = whichTable->getStorageLoc();
+        string key = whichTable->getName() + '/' + whichTable->getStorageLoc();
         int fd = -1;
 
         // if the file descriptor is exist, then read the page from disk
@@ -196,7 +196,7 @@ void MyDB_BufferManager :: writeDisk(Page *pagePtr) {
     char* bufferPtr = pagePtr->getBufferPtr();
 
     if (whichTable != nullptr){ // if not anonymous
-        string key = whichTable->getStorageLoc();
+        string key = whichTable->getName() + '/' + whichTable->getStorageLoc();
         int fd = -1;
 
         // if the file descriptor is exist, then read the page from disk
