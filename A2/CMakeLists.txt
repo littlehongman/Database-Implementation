@@ -19,7 +19,7 @@ add_executable(A2
         Main/BufferMgr/headers/TableCompare.h
         Main/BufferMgr/source/MyDB_BufferManager.cc
         Main/BufferMgr/source/MyDB_Page.cc
-        Main/BufferTest/source/BufferQUnit.cc
+#        Main/BufferTest/source/BufferQUnit.cc
         Main/Catalog/headers/MyDB_AttType.h
         Main/Catalog/headers/MyDB_Catalog.h
         Main/Catalog/headers/MyDB_PageType.h
