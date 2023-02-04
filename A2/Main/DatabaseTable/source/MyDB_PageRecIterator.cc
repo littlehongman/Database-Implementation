@@ -7,8 +7,16 @@
 
 #include "MyDB_PageRecIterator.h"
 
+MyDB_PageRecIterator::MyDB_PageRecIterator(MyDB_RecordPtr myRecord, MyDB_PageReaderWriter *myPageReaderWriter) {
 
+}
+void MyDB_PageRecIterator::getNext() {
 
+}
+
+bool MyDB_PageRecIterator::hasNext() {
+    return false;
+}
 
 
 #endif

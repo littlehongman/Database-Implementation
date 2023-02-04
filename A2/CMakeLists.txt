@@ -38,4 +38,4 @@ add_executable(A2
         Main/Record/headers/MyDB_Record.h
         Main/Record/source/MyDB_AttVal.cc
         Main/Record/source/MyDB_Record.cc
-        Main/RecordTest/source/RecordQUnit.cc)
+        Main/RecordTest/source/RecordQUnit.cc Main/DatabaseTable/headers/MyDB_PageRecIterator.h Main/DatabaseTable/headers/MyDB_TableRecIterator.h Main/DatabaseTable/source/MyDB_PageRecIterator.cc Main/DatabaseTable/source/MyDB_TableRecIterator.cc)
