@@ -6,10 +6,11 @@
 
 
 #include "MyDB_PageRecIterator.h"
+#include <utility>
 
 MyDB_PageRecIterator::MyDB_PageRecIterator(MyDB_RecordPtr rp, MyDB_PageHandle ph) {
-    this->recordPtr = rp;
-    this->pageHandle = ph;
+    this->recordPtr = std::move(rp);
+    this->pageHandle = std::move(ph);
     this->bytesUsed = sizeof (PageOverlay);
 }
 
