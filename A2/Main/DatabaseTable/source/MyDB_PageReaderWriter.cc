@@ -20,7 +20,7 @@ void MyDB_PageReaderWriter :: clear () {
 
 MyDB_RecordIteratorPtr MyDB_PageReaderWriter :: getIterator (MyDB_RecordPtr iterateIntoMe) {
     // create a new iterator, the data of record will be put into th location where the iterateIntoMe points to
-    MyDB_RecordIteratorPtr recordIterator = make_shared <MyDB_PageRecIterator> (iterateIntoMe, this->pageHandle);
+    MyDB_RecordIteratorPtr recordIterator = make_shared <MyDB_PageRecIterator> (iterateIntoMe, this->pageHandle, this->page);
 
     return recordIterator;
 }
@@ -40,7 +40,7 @@ bool MyDB_PageReaderWriter :: append (MyDB_RecordPtr appendMe) {
     }
 
     // Get the current position of the page bytes
-    auto pos = this->page->bytes[this->page->offsetToNextUnwritten];
+    unsigned pos = this->page->offsetToNextUnwritten;
 
     // Write the record to the page
     appendMe->toBinary(&(this->page[pos]));
@@ -53,6 +53,7 @@ bool MyDB_PageReaderWriter :: append (MyDB_RecordPtr appendMe) {
 }
 
 MyDB_PageReaderWriter::MyDB_PageReaderWriter(MyDB_BufferManagerPtr bufferManager, MyDB_TablePtr tablePtr, long i) {
+    // TODO: getPage or getPinnedPage?
     this->pageHandle = bufferManager->getPage(tablePtr, i);
 
     page = (PageOverlay*) this->pageHandle->getBytes();

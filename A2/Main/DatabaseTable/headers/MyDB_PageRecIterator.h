@@ -13,7 +13,7 @@
 class MyDB_PageRecIterator : public MyDB_RecordIterator {
 
 public:
-    MyDB_PageRecIterator(MyDB_RecordPtr rp, MyDB_PageHandle ph);
+    MyDB_PageRecIterator(MyDB_RecordPtr rp, MyDB_PageHandle ph, PageOverlay* page);
 
     void getNext() override;
 
@@ -23,6 +23,8 @@ private:
     MyDB_RecordPtr recordPtr;
     MyDB_PageHandle pageHandle;
     unsigned bytesUsed;
+
+    PageOverlay* page;
 
 };
 

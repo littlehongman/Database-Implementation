@@ -8,10 +8,12 @@
 #include "MyDB_PageRecIterator.h"
 #include <utility>
 
-MyDB_PageRecIterator::MyDB_PageRecIterator(MyDB_RecordPtr rp, MyDB_PageHandle ph) {
+MyDB_PageRecIterator::MyDB_PageRecIterator(MyDB_RecordPtr rp, MyDB_PageHandle ph, PageOverlay* page) {
     this->recordPtr = std::move(rp);
     this->pageHandle = std::move(ph);
     this->bytesUsed = sizeof (PageOverlay);
+    
+    this->page = page;
 }
 
 void MyDB_PageRecIterator::getNext() {
@@ -27,8 +29,10 @@ void MyDB_PageRecIterator::getNext() {
 }
 
 bool MyDB_PageRecIterator::hasNext() {
-    auto* pageOverlay = (PageOverlay*) this->pageHandle->getBytes();
-    if (pageOverlay->offsetToNextUnwritten > this->bytesUsed) {
+//    auto* pageOverlay = (PageOverlay*) this->pageHandle->getBytes();
+    auto pageCurrSize = sizeof(PageOverlay) + this->page->offsetToNextUnwritten;
+
+    if (pageCurrSize > this->bytesUsed) {
         return true;
     }
     return false;
