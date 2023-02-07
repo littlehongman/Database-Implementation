@@ -3,7 +3,9 @@
 #define PAGE_RW_H
 
 #include "MyDB_PageType.h"
-#include "MyDB_TableReaderWriter.h"
+#include "MyDB_BufferManager.h"
+#include "MyDB_Record.h"
+#include "MyDB_RecordIterator.h"
 
 struct PageOverlay{
     unsigned offsetToNextUnwritten;
@@ -12,12 +14,20 @@ struct PageOverlay{
     char bytes[0]; // this is where to store the actual data
 };
 
+class MyDB_PageReaderWriter;
+typedef shared_ptr <MyDB_PageReaderWriter> MyDB_PageReaderWriterPtr;
+
 class MyDB_PageReaderWriter {
 
 public:
 
 	// ANY OTHER METHODS YOU WANT HERE
-    MyDB_PageReaderWriter(MyDB_BufferManagerPtr bufferManager, MyDB_TablePtr table, long i);
+//    MyDB_PageReaderWriter(MyDB_BufferManagerPtr bufferManager, MyDB_TablePtr table, long i);
+
+    MyDB_PageReaderWriter(MyDB_PageHandle pageHandle, size_t pageSize);
+
+    // TODO: temp empty constructor
+    MyDB_PageReaderWriter();
 
 	// empties out the contents of this page, so that it has no records in it
 	// the type of the page is set to MyDB_PageType :: RegularPage
@@ -38,6 +48,8 @@ public:
 
 	// sets the type of the page
 	void setType (MyDB_PageType toMe);
+
+    size_t getCurrentPageSize();
 	
 private:
     // Use this to obtain correct memory to read record, or write record

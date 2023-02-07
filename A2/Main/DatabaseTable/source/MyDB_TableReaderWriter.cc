@@ -40,24 +40,23 @@ MyDB_PageReaderWriter MyDB_TableReaderWriter :: last () {
 
 
 void MyDB_TableReaderWriter :: append (MyDB_RecordPtr appendMe) {
-    bool canAppend = this->lastPageRW->append(appendMe);
-
-    if (!canAppend) {// Create a new page
-        // increment pageId
-        this->lastPageId++;
-
-        // Set table size
-        this->tablePtr->setLastPage (lastPageId);
-
-        // make new pageHandle
-        MyDB_PageHandle newPageHandle = this->bufferManagerPtr->getPinnedPage(this->tablePtr, this->lastPageId);
-
-        // Create pageReadWriter
-        this->lastPageRW = make_shared<MyDB_PageReaderWriter>(newPageHandle, this->bufferManagerPtr->getPageSize());
-        this->lastPageRW->append(appendMe);
+    if (this->lastPageRW && this->lastPageRW->append(appendMe)){
+        return;
     }
 
-    return;
+    // Create a new page
+    // increment pageId
+    this->lastPageId++;
+
+    // Set table size
+    this->tablePtr->setLastPage (lastPageId);
+
+    // make new pageHandle
+    MyDB_PageHandle newPageHandle = this->bufferManagerPtr->getPinnedPage(this->tablePtr, this->lastPageId);
+
+    // Create pageReadWriter
+    this->lastPageRW = make_shared<MyDB_PageReaderWriter>(newPageHandle, this->bufferManagerPtr->getPageSize());
+    this->lastPageRW->append(appendMe);
 
 }
 
@@ -76,9 +75,8 @@ void MyDB_TableReaderWriter :: loadFromTextFile (string filename) {
     ifstream infile (filename);
 
     if (infile.is_open()){
-        while (infile.good()){
-            // Get the line from the file
-            getline(infile, line);
+        // Get the line from the file
+        while (getline(infile, line)){
 
             // parse the contents of this record from the given string
             recordPtr->fromString(line);
