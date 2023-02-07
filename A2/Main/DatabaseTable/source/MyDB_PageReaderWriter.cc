@@ -10,7 +10,7 @@ using namespace std;
 void MyDB_PageReaderWriter :: clear () {
     // Clear the content on the page, and reset the offset to the beginning of the page
 
-    memset((char*) this->pageHandle->getBytes(),0,this->pageSize); // Need to minus 1
+    memset(this->pageHandle->getBytes(),0,this->pageSize); // Need to minus 1
     this->page->offsetToNextUnwritten = 0;
 
     this->setType(MyDB_PageType::RegularPage);
@@ -73,7 +73,9 @@ MyDB_PageReaderWriter::MyDB_PageReaderWriter(MyDB_PageHandle pageHandle, size_t 
     this->pageHandle = pageHandle;
 
     this->page = (PageOverlay*) this->pageHandle->getBytes();
-    this->page->offsetToNextUnwritten = 0;
+
+    // TODO: Do we need this?
+    this->page->offsetToNextUnwritten -= sizeof(PageOverlay);
 
     this->pageSize = pageSize;
 }

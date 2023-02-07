@@ -54,8 +54,13 @@ void MyDB_TableReaderWriter :: append (MyDB_RecordPtr appendMe) {
     // make new pageHandle
     MyDB_PageHandle newPageHandle = this->bufferManagerPtr->getPinnedPage(this->tablePtr, this->lastPageId);
 
+
     // Create pageReadWriter
     this->lastPageRW = make_shared<MyDB_PageReaderWriter>(newPageHandle, this->bufferManagerPtr->getPageSize());
+
+    // Clear page
+    this->lastPageRW->clear(); // VERY IMPORTANT: set offset = 0
+
     this->lastPageRW->append(appendMe);
 
 }

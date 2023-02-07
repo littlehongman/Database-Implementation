@@ -16,7 +16,7 @@ void MyDB_TableRecIterator::getNext() {
         return this->pageRecIterator->getNext();
     }
 
-    cout << " There is no next page" << endl;
+    //cout << " There is no next page" << endl;
     return;
 
 }
@@ -36,11 +36,11 @@ bool MyDB_TableRecIterator::hasNext() {
             this->pageId++;
             this->pageRecIterator = tableRWPtr->operator[]( this->pageId).getIterator(recordPtr);
 
-            return true;
+            return this->pageRecIterator->hasNext();
         }
         else{
             // There is no next page
-            cout << " There is no next page" << endl;
+            //cout << " There is no next page" << endl;
             return false;
         }
     }
