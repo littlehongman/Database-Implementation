@@ -3,10 +3,10 @@
 #define TABLE_RW_H
 
 #include <memory>
-#include "MyDB_BufferManager.h"
 #include "MyDB_Record.h"
-#include "MyDB_RecordIterator.h"
 #include "MyDB_Table.h"
+#include "MyDB_PageReaderWriter.h"
+#include "MyDB_TableReaderWriter.h"
 
 // create a smart pointer for the catalog
 using namespace std;
@@ -42,17 +42,22 @@ public:
 	void writeIntoTextFile (string toMe);
 
 	// access the i^th page in this file
-	MyDB_PageReaderWriter operator [] (size_t i);
+	MyDB_PageReaderWriter operator [] (size_t id);
 
     // access the last page in the file
     MyDB_PageReaderWriter last ();
 
 private:
-    MyDB_BufferManagerPtr bufferManager;
-    MyDB_TablePtr table;
+    MyDB_BufferManagerPtr bufferManagerPtr;
+    MyDB_TablePtr tablePtr;
 
-    //
-    MyDB_PageReaderWriter
+    // Use this when append records
+    MyDB_PageReaderWriterPtr lastPageRW;
+
+    // Use this when indexing (operator [])
+    MyDB_PageReaderWriterPtr pageRW;
+
+    size_t lastPageId;
 };
 
 #endif
