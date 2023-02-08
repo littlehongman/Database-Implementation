@@ -94,8 +94,7 @@ void MyDB_TableReaderWriter :: loadFromTextFile (const string& filename) {
         infile.close();
     }
 
-    return;
-}
+    }
 
 MyDB_RecordIteratorPtr MyDB_TableReaderWriter :: getIterator (const MyDB_RecordPtr& iterateIntoMe) {
 
