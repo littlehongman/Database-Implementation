@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
 			if (myIter->hasNext()) {
 				myIter->getNext();
 			}
-			
+
 			cout << "read record..." << flush;
 			stringstream ss;
 			ss << temp;

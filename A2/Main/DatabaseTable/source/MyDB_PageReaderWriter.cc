@@ -10,10 +10,12 @@ using namespace std;
 void MyDB_PageReaderWriter :: clear () {
     // Clear the content on the page, and reset the offset to the beginning of the page
 
-    memset(this->pageHandle->getBytes(),0,this->pageSize); // Need to minus 1
+//    memset(this->pageHandle->getBytes(),0,this->pageSize); // Need to minus 1
     this->page->offsetToNextUnwritten = 0;
 
     this->setType(MyDB_PageType::RegularPage);
+
+    this->pageHandle->wroteBytes();
 
     return;
 }
@@ -42,7 +44,7 @@ bool MyDB_PageReaderWriter :: append (MyDB_RecordPtr appendMe) {
     }
 
     // Get the current position of the page bytes
-    unsigned pos = this->page->offsetToNextUnwritten;
+    unsigned pos = this->page->offsetToNextUnwritten ;
 
     // Write the record to the page
     void *next = appendMe->toBinary(&(this->page->bytes[pos]));
@@ -73,9 +75,9 @@ MyDB_PageReaderWriter::MyDB_PageReaderWriter(MyDB_PageHandle pageHandle, size_t 
     this->pageHandle = pageHandle;
 
     this->page = (PageOverlay*) this->pageHandle->getBytes();
+//    cout << (PageOverlay*)this->pageHandle->getBytes() << endl;
 
-    // TODO: Do we need this?
-    this->page->offsetToNextUnwritten -= sizeof(PageOverlay);
+//    this->page->offsetToNextUnwritten -= sizeof(PageOverlay);
 
     this->pageSize = pageSize;
 }

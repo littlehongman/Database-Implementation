@@ -32,6 +32,7 @@ bool MyDB_PageRecIterator::hasNext() {
 //    auto* pageOverlay = (PageOverlay*) this->pageHandle->getBytes();
     size_t pageCurrSize = sizeof(PageOverlay) + sizeof(char) * this->page->offsetToNextUnwritten;
 
+    //cout << pageCurrSize << endl;
     if (pageCurrSize > this->bytesUsed) {
         return true;
     }

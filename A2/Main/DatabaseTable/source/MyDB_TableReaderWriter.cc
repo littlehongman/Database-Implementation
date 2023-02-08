@@ -13,12 +13,12 @@ using namespace std;
 MyDB_PageReaderWriter MyDB_TableReaderWriter :: operator [] (size_t id) {
     if (id <= this->lastPageId){
         // make a pageHandle
-        MyDB_PageHandle pageHandle = this->bufferManagerPtr->getPinnedPage(this->tablePtr, id);
+        MyDB_PageHandle pageHandle = this->bufferManagerPtr->getPage(this->tablePtr, id);
 
         // make a pageReadWriter
-        this->pageRW = make_shared<MyDB_PageReaderWriter>(pageHandle, this->bufferManagerPtr->getPageSize());
+        auto temp = make_shared<MyDB_PageReaderWriter>(pageHandle, this->bufferManagerPtr->getPageSize());
 
-        return *(this->pageRW);
+        return *(temp);
     }
 
     else {
@@ -130,10 +130,15 @@ MyDB_TableReaderWriter :: MyDB_TableReaderWriter (MyDB_TablePtr forMe, MyDB_Buff
     this->bufferManagerPtr = myBuffer;
     this->tablePtr = forMe;
 
-    this->lastPageRW = nullptr;
     this->pageRW = nullptr;
+    this->lastPageRW = nullptr;
 
     this->lastPageId = forMe->lastPage(); // Initially should be -1
+
+    if (this->lastPageId != -1){
+        MyDB_PageHandle pageHandle = this->bufferManagerPtr->getPage(this->tablePtr, this->lastPageId);
+        this->lastPageRW = make_shared<MyDB_PageReaderWriter>(pageHandle, this->bufferManagerPtr->getPageSize());
+    }
 }
 
 #endif

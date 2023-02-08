@@ -23,37 +23,52 @@ void MyDB_TableRecIterator::getNext() {
 
 bool MyDB_TableRecIterator::hasNext() {
     // Current pageRecIterator has next
-    if (this->pageRecIterator->hasNext()) {
-        return true;
-    }
-
-    else{
-        // Current pageRecIterator does not have next
-        // Check if there is next page
-        if (this->pageId < this->tablePtr->lastPage()) {
-            // There is next page
-            // Get next page
-            this->pageId++;
-            this->pageRecIterator = tableRWPtr->operator[]( this->pageId).getIterator(recordPtr);
-
-            return this->pageRecIterator->hasNext();
+    while (this->pageId <= this->tablePtr->lastPage()) {
+        if (this->pageRecIterator && this->pageRecIterator->hasNext()) {
+            return true;
         }
-        else{
-            // There is no next page
-            //cout << " There is no next page" << endl;
-            return false;
+
+        // There is next page
+        // Get next page
+        this->pageId++;
+
+        if (this->pageId == 33){
+            cout << "test";
         }
+
+        //cout << pageId << endl;
+        this->pageRecIterator = tableRWPtr->operator[]( this->pageId).getIterator(recordPtr);
     }
+    // There is no next page
+    //cout << " There is no next page" << endl;
+    return false;
+
+//    else{
+//        // Current pageRecIterator does not have next
+//        // Check if there is next page
+//        while (this->pageId < this->tablePtr->lastPage()) {
+//            // There is next page
+//            // Get next page
+//            this->pageId++;
+//            //cout << pageId << endl;
+//            this->pageRecIterator = tableRWPtr->operator[]( this->pageId).getIterator(recordPtr);
+//
+//            if(this->pageRecIterator->hasNext()){
+//                return true;
+//            }
+//        }
+//    }
+
 }
 
 MyDB_TableRecIterator::MyDB_TableRecIterator(MyDB_TablePtr tablePtr, MyDB_TableReaderWriter *tableRWPtr, MyDB_RecordPtr recordPtr) {
     this->tableRWPtr = tableRWPtr;
-    this->pageRecIterator = tableRWPtr->operator[](0).getIterator(recordPtr);
+    this->pageRecIterator = nullptr;
 
     this->tablePtr = tablePtr;
     this->recordPtr = recordPtr;
 
-    this->pageId = 0;
+    this->pageId = -1;
 }
 
 #endif
