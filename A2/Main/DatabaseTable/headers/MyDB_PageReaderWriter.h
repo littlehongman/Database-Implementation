@@ -36,11 +36,11 @@ public:
 	// return an iterator over this page... each time returnVal->next () is
 	// called, the resulting record will be placed into the record pointed to
 	// by iterateIntoMe
-	MyDB_RecordIteratorPtr getIterator (MyDB_RecordPtr iterateIntoMe);
+	MyDB_RecordIteratorPtr getIterator (const MyDB_RecordPtr& iterateIntoMe);
 
 	// appends a record to this page... return false is the append fails because
 	// there is not enough space on the page; otherwise, return true
-	bool append (MyDB_RecordPtr appendMe);
+	bool append (const MyDB_RecordPtr& appendMe);
 
 	// gets the type of this page... this is just a value from an enumeration
 	// that is stored within the page

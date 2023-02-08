@@ -7,6 +7,8 @@
 
 #include "MyDB_TableRecIterator.h"
 
+#include <utility>
+
 using namespace std;
 
 class MyDB_TableReaderWriter;
@@ -17,7 +19,6 @@ void MyDB_TableRecIterator::getNext() {
     }
 
     //cout << " There is no next page" << endl;
-    return;
 
 }
 
@@ -65,8 +66,8 @@ MyDB_TableRecIterator::MyDB_TableRecIterator(MyDB_TablePtr tablePtr, MyDB_TableR
     this->tableRWPtr = tableRWPtr;
     this->pageRecIterator = nullptr;
 
-    this->tablePtr = tablePtr;
-    this->recordPtr = recordPtr;
+    this->tablePtr = std::move(tablePtr);
+    this->recordPtr = std::move(recordPtr);
 
     this->pageId = -1;
 }

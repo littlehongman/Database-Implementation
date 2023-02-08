@@ -3,6 +3,7 @@
 #define PAGE_RW_C
 
 #include "MyDB_PageReaderWriter.h"
+#include <utility>
 #include "MyDB_PageRecIterator.h"
 
 using namespace std;
@@ -16,12 +17,10 @@ void MyDB_PageReaderWriter :: clear () {
     this->setType(MyDB_PageType::RegularPage);
 
     this->pageHandle->wroteBytes();
-
-    return;
 }
 
 
-MyDB_RecordIteratorPtr MyDB_PageReaderWriter :: getIterator (MyDB_RecordPtr iterateIntoMe) {
+MyDB_RecordIteratorPtr MyDB_PageReaderWriter :: getIterator (const MyDB_RecordPtr& iterateIntoMe) {
     // create a new iterator, the data of record will be put into the location where the iterateIntoMe points to
     MyDB_RecordIteratorPtr pageIterator = make_shared <MyDB_PageRecIterator> (iterateIntoMe, this->pageHandle, this->page);
 
@@ -36,7 +35,7 @@ MyDB_PageType MyDB_PageReaderWriter :: getType () {
     return this->page->pageType;
 }
 
-bool MyDB_PageReaderWriter :: append (MyDB_RecordPtr appendMe) {
+bool MyDB_PageReaderWriter :: append (const MyDB_RecordPtr& appendMe) {
     size_t recordSize = appendMe->getBinarySize();
 
     if (this->getCurrentPageSize() + recordSize > this->pageSize) {
@@ -72,7 +71,7 @@ size_t MyDB_PageReaderWriter ::getCurrentPageSize() {
 //}
 
 MyDB_PageReaderWriter::MyDB_PageReaderWriter(MyDB_PageHandle pageHandle, size_t pageSize) {
-    this->pageHandle = pageHandle;
+    this->pageHandle = std::move(pageHandle);
 
     this->page = (PageOverlay*) this->pageHandle->getBytes();
 //    cout << (PageOverlay*)this->pageHandle->getBytes() << endl;

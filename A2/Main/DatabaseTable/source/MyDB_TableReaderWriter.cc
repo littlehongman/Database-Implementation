@@ -3,6 +3,7 @@
 #define TABLE_RW_C
 
 #include <fstream>
+#include <utility>
 #include "MyDB_PageReaderWriter.h"
 #include "MyDB_TableReaderWriter.h"
 #include "MyDB_TableRecIterator.h"
@@ -39,7 +40,7 @@ MyDB_PageReaderWriter MyDB_TableReaderWriter :: last () {
 }
 
 
-void MyDB_TableReaderWriter :: append (MyDB_RecordPtr appendMe) {
+void MyDB_TableReaderWriter :: append (const MyDB_RecordPtr& appendMe) {
     if (this->lastPageRW && this->lastPageRW->append(appendMe)){
         return;
     }
@@ -65,7 +66,7 @@ void MyDB_TableReaderWriter :: append (MyDB_RecordPtr appendMe) {
 
 }
 
-void MyDB_TableReaderWriter :: loadFromTextFile (string filename) {
+void MyDB_TableReaderWriter :: loadFromTextFile (const string& filename) {
     // Set the last page to 0
     // this->tablePtr->lastPage() = -1 if there has never been anything written to the table
     this->tablePtr->setLastPage (0);
@@ -96,12 +97,12 @@ void MyDB_TableReaderWriter :: loadFromTextFile (string filename) {
     return;
 }
 
-MyDB_RecordIteratorPtr MyDB_TableReaderWriter :: getIterator (MyDB_RecordPtr iterateIntoMe) {
+MyDB_RecordIteratorPtr MyDB_TableReaderWriter :: getIterator (const MyDB_RecordPtr& iterateIntoMe) {
 
 	return make_shared <MyDB_TableRecIterator> (this->tablePtr, this, iterateIntoMe);
 }
 
-void MyDB_TableReaderWriter :: writeIntoTextFile (string filename) {
+void MyDB_TableReaderWriter :: writeIntoTextFile (const string& filename) {
 
     // Iteratively read data from the database with a record ptr and append it to the text file
     MyDB_RecordPtr recordPtr = this->getEmptyRecord();
@@ -123,11 +124,10 @@ void MyDB_TableReaderWriter :: writeIntoTextFile (string filename) {
         outfile.close();
     }
 
-    return;
-}
+    }
 
-MyDB_TableReaderWriter :: MyDB_TableReaderWriter (MyDB_TablePtr forMe, MyDB_BufferManagerPtr myBuffer) {
-    this->bufferManagerPtr = myBuffer;
+MyDB_TableReaderWriter :: MyDB_TableReaderWriter (const MyDB_TablePtr& forMe, MyDB_BufferManagerPtr myBuffer) {
+    this->bufferManagerPtr = std::move(myBuffer);
     this->tablePtr = forMe;
 
     this->pageRW = nullptr;
