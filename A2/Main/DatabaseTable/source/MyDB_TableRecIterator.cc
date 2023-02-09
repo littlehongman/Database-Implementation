@@ -17,31 +17,29 @@ void MyDB_TableRecIterator::getNext() {
     if (this->hasNext()){
         return this->pageRecIterator->getNext();
     }
-
-    //cout << " There is no next page" << endl;
-
 }
 
 bool MyDB_TableRecIterator::hasNext() {
     // Current pageRecIterator has next
     while (this->pageId <= this->tablePtr->lastPage()) {
+
         if (this->pageRecIterator && this->pageRecIterator->hasNext()) {
             return true;
         }
 
-        // There is next page
-        // Get next page
+        // Increment pageId
         this->pageId++;
+        // IMPORTANT: We need to check if pageId is bigger than table numPage
+        // because in tableRWPtr->operator[], it is allow to get idx > table numPage
+        // If we don't check here, then we will end up it infinite loop
+        if (this->pageId > this->tablePtr->lastPage())
+            break;
 
-        if (this->pageId == 33){
-            cout << "test";
-        }
 
-        //cout << pageId << endl;
         this->pageRecIterator = tableRWPtr->operator[]( this->pageId).getIterator(recordPtr);
     }
+
     // There is no next page
-    //cout << " There is no next page" << endl;
     return false;
 
 //    else{

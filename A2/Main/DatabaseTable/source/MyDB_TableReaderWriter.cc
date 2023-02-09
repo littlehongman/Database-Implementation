@@ -25,7 +25,7 @@ MyDB_PageReaderWriter MyDB_TableReaderWriter :: operator [] (size_t id) {
         return *(temp);
     }
 
-    while (this->lastPageId != id){ // Although the id > lastPageId, the table should have the ability to expand without any limit.
+    while (this->lastPageId < id){ // Although the id > lastPageId, the table should have the ability to expand without any limit.
         // TODO: Loop through all of the other pages in the file, up to and including i,
         // Make sure to initialize them properly (probably this involves setting the used bytes to zero, for example).
         // Make sure to update the table size appropiately. Then return the last one.

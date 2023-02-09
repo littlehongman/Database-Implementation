@@ -416,7 +416,36 @@ int main(int argc, char *argv[]) {
 		else cout << "***FAIL***" << endl << flush;
 		QUNIT_IS_EQUAL(counter, 10000);
 	}
-	FALLTHROUGH_INTENDED;
+        FALLTHROUGH_INTENDED;
+    case 10:
+    {
+        cout << "TEST 10..." << flush;
+        initialize();
+        bool result = false;
+        {
+            cout << "create manager..." << flush;
+            MyDB_CatalogPtr myCatalog = make_shared <MyDB_Catalog>("catFile");
+            map <string, MyDB_TablePtr> allTables = MyDB_Table::getAllTables(myCatalog);
+            MyDB_BufferManagerPtr myMgr = make_shared <MyDB_BufferManager>(1024, 16, "tempFile");
+
+            cout << "create TableReaderWriter..." << flush;
+            MyDB_TableReaderWriter supplierTable(allTables["supplier"], myMgr);
+            MyDB_RecordPtr temp = supplierTable.getEmptyRecord();
+
+            cout << "create PageIterator..." << flush;
+            MyDB_RecordIteratorPtr myIter = supplierTable[1700].getIterator(temp);
+
+            cout << "get result..." << flush;
+            result = myIter->hasNext();
+
+            cout << "shutdown manager..." << flush;
+        }
+        if (!result) cout << "CORRECT" << endl << flush;
+        else cout << "***FAIL***" << endl << flush;
+        QUNIT_IS_TRUE(!result);
+    }
+
+    FALLTHROUGH_INTENDED;
 	case 0:
 	{
 		// table hasNext with all pages cleared
