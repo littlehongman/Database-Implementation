@@ -14,9 +14,11 @@ void MyDB_PageReaderWriter :: clear () {
 //    memset(this->pageHandle->getBytes(),0,this->pageSize); // Need to minus 1
     this->page->offsetToNextUnwritten = 0;
 
+    // Tell me the buffer manager to write 0 back into the actual memory
+    this->pageHandle->wroteBytes();
+
     this->setType(MyDB_PageType::RegularPage);
 
-    this->pageHandle->wroteBytes();
 }
 
 
@@ -73,11 +75,13 @@ size_t MyDB_PageReaderWriter ::getCurrentPageSize() {
 MyDB_PageReaderWriter::MyDB_PageReaderWriter(MyDB_PageHandle pageHandle, size_t pageSize) {
     this->pageHandle = std::move(pageHandle);
 
+    // Cast the buffer into struct PageOverlay =>
+    // first 4 bytes is unsigned
+    // subsequent 4 bytes is PageType
+    // rest of the memory will store records
     this->page = (PageOverlay*) this->pageHandle->getBytes();
-//    cout << (PageOverlay*)this->pageHandle->getBytes() << endl;
 
-//    this->page->offsetToNextUnwritten -= sizeof(PageOverlay);
-
+    // Get the maximum pageSize, which is the buffer size
     this->pageSize = pageSize;
 }
 

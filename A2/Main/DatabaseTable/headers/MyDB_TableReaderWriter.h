@@ -51,11 +51,8 @@ private:
     MyDB_BufferManagerPtr bufferManagerPtr;
     MyDB_TablePtr tablePtr;
 
-    // Use this when append records
+    // Use this when append records and [] operator
     MyDB_PageReaderWriterPtr lastPageRW;
-
-    // Use this when indexing (operator [])
-    MyDB_PageReaderWriterPtr pageRW;
 
     size_t lastPageId;
 };

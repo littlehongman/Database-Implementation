@@ -12,21 +12,38 @@ using namespace std;
 
 
 MyDB_PageReaderWriter MyDB_TableReaderWriter :: operator [] (size_t id) {
+    MyDB_PageReaderWriterPtr temp = nullptr;
+
+    // When we initialize the table, the table have the size of table
     if (id <= this->lastPageId){
         // make a pageHandle
         MyDB_PageHandle pageHandle = this->bufferManagerPtr->getPage(this->tablePtr, id);
 
         // make a pageReadWriter
-        auto temp = make_shared<MyDB_PageReaderWriter>(pageHandle, this->bufferManagerPtr->getPageSize());
+        temp = make_shared<MyDB_PageReaderWriter>(pageHandle, this->bufferManagerPtr->getPageSize());
 
         return *(temp);
     }
 
-    else {
-        // TODO: Loop through all of the other pages in the file, up to and including i, and make sure to initialize them properly (probably this involves setting the used bytes to zero, for example). Make sure to update the table size appropiately. Then return the last one.
+    while (this->lastPageId != id){ // Although the id > lastPageId, the table should have the ability to expand without any limit.
+        // TODO: Loop through all of the other pages in the file, up to and including i,
+        // Make sure to initialize them properly (probably this involves setting the used bytes to zero, for example).
+        // Make sure to update the table size appropiately. Then return the last one.
 
-        return MyDB_PageReaderWriter();
+        // increment lastPageId
+        this->lastPageId += 1;
+
+        // Update table size
+        this->tablePtr->setLastPage(this->lastPageId);
+
+        MyDB_PageHandle pageHandle = this->bufferManagerPtr->getPage(this->tablePtr, this->lastPageId);
+        temp = make_shared<MyDB_PageReaderWriter>(pageHandle, this->bufferManagerPtr->getPageSize());
+
+        // Because this page don't actually exist in table, clear it for safety
+        temp->clear();
     }
+
+    return *(temp);
 }
 
 MyDB_RecordPtr MyDB_TableReaderWriter :: getEmptyRecord () {
@@ -94,7 +111,7 @@ void MyDB_TableReaderWriter :: loadFromTextFile (const string& filename) {
         infile.close();
     }
 
-    }
+}
 
 MyDB_RecordIteratorPtr MyDB_TableReaderWriter :: getIterator (const MyDB_RecordPtr& iterateIntoMe) {
 
@@ -123,17 +140,17 @@ void MyDB_TableReaderWriter :: writeIntoTextFile (const string& filename) {
         outfile.close();
     }
 
-    }
+}
 
 MyDB_TableReaderWriter :: MyDB_TableReaderWriter (const MyDB_TablePtr& forMe, MyDB_BufferManagerPtr myBuffer) {
     this->bufferManagerPtr = std::move(myBuffer);
     this->tablePtr = forMe;
 
-    this->pageRW = nullptr;
     this->lastPageRW = nullptr;
 
-    this->lastPageId = forMe->lastPage(); // Initially should be -1
-
+    // Initially, tablePtr numPage is set to -1
+    // However, after when we call initialization, the table numPage will change
+    this->lastPageId = forMe->lastPage();
     if (this->lastPageId != -1){
         MyDB_PageHandle pageHandle = this->bufferManagerPtr->getPage(this->tablePtr, this->lastPageId);
         this->lastPageRW = make_shared<MyDB_PageReaderWriter>(pageHandle, this->bufferManagerPtr->getPageSize());
