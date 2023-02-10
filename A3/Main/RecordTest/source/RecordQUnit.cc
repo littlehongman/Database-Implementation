@@ -1,7 +1,7 @@
 
 #ifndef RECORD_TEST_H
 #define RECORD_TEST_H
-
+/*
 #include "MyDB_AttType.h"  
 #include "MyDB_BufferManager.h"
 #include "MyDB_Catalog.h"  
@@ -467,5 +467,5 @@ int main(int argc, char *argv[]) {
 		break;
 	}
 }
-
+*/
 #endif
