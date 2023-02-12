@@ -12,13 +12,43 @@
 using namespace std;
 
 
-
 void mergeIntoFile(MyDB_TableReaderWriter &sortIntoMe, vector<MyDB_RecordIteratorAltPtr> &mergeUs, function<bool()> comparator, MyDB_RecordPtr lhs,
                    MyDB_RecordPtr rhs) {
 
-//    // Define data structures
-//    priority_queue<MyDB_RecordIteratorAltPtr, vector<MyDB_RecordIteratorAltPtr>, comparator>;
+    auto compare = [&lhs, &rhs, &comparator](const MyDB_RecordIteratorAltPtr& a, const MyDB_RecordIteratorAltPtr& b) {
+        // Load record ptrs with iterators
+        a->getCurrent(lhs);
+        b->getCurrent(rhs);
 
+        // If comparator() == true => lhs < rhs
+        // Else lhs > rhs
+        // To make the min heap, we will set lhs > rhs
+        return !comparator();
+    };
+
+    // Define data structures
+    priority_queue<MyDB_RecordIteratorAltPtr, vector<MyDB_RecordIteratorAltPtr>, decltype(compare)> pq(compare);
+
+    // Push vector items into queue
+    while (mergeUs.size() > 0){
+        pq.push(mergeUs.back());
+        mergeUs.pop_back();
+    }
+
+    // Merge K sorted Lists
+    while(pq.size() > 0){
+        MyDB_RecordIteratorAltPtr smallest = pq.top();
+        pq.pop();
+
+        smallest->getCurrent(lhs);
+        sortIntoMe.append(lhs);
+
+        if (smallest->advance()){
+            pq.push(smallest);
+        }
+    }
+
+    return;
 }
 
 
@@ -40,7 +70,8 @@ mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_RecordIteratorAltPtr leftIter,
         leftIter->getCurrent(lhs);
         rightIter->getCurrent(rhs);
 
-        // TODO: True => Larger or Smaller?
+        // If comparator == True => lhs < rhs
+        // Else => lhs > rhs
         if (comparator()) {
             next = lhs;
             left_has_next = leftIter->advance();
