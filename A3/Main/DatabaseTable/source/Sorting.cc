@@ -12,10 +12,11 @@
 using namespace std;
 
 
-void mergeIntoFile(MyDB_TableReaderWriter &sortIntoMe, vector<MyDB_RecordIteratorAltPtr> &mergeUs, function<bool()> comparator, MyDB_RecordPtr lhs,
+void mergeIntoFile(MyDB_TableReaderWriter &sortIntoMe, vector<MyDB_RecordIteratorAltPtr> &mergeUs,
+                   function<bool()> comparator, MyDB_RecordPtr lhs,
                    MyDB_RecordPtr rhs) {
 
-    auto compare = [&lhs, &rhs, &comparator](const MyDB_RecordIteratorAltPtr& a, const MyDB_RecordIteratorAltPtr& b) {
+    auto compare = [&lhs, &rhs, &comparator](const MyDB_RecordIteratorAltPtr &a, const MyDB_RecordIteratorAltPtr &b) {
         // Load record ptrs with iterators
         a->getCurrent(lhs);
         b->getCurrent(rhs);
@@ -30,25 +31,24 @@ void mergeIntoFile(MyDB_TableReaderWriter &sortIntoMe, vector<MyDB_RecordIterato
     priority_queue<MyDB_RecordIteratorAltPtr, vector<MyDB_RecordIteratorAltPtr>, decltype(compare)> pq(compare);
 
     // Push vector items into queue
-    while (mergeUs.size() > 0){
+    while (!mergeUs.empty()) {
         pq.push(mergeUs.back());
         mergeUs.pop_back();
     }
 
     // Merge K sorted Lists
-    while(pq.size() > 0){
+    while (!pq.empty()) {
         MyDB_RecordIteratorAltPtr smallest = pq.top();
         pq.pop();
 
         smallest->getCurrent(lhs);
         sortIntoMe.append(lhs);
 
-        if (smallest->advance()){
+        if (smallest->advance()) {
             pq.push(smallest);
         }
     }
 
-    return;
 }
 
 
@@ -108,7 +108,8 @@ void appendToPage(const MyDB_BufferManagerPtr& parent, vector<MyDB_PageReaderWri
 }
 
 
-void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &sortIntoMe, function<bool()> comparator, MyDB_RecordPtr lhs, MyDB_RecordPtr rhs) {
+void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &sortIntoMe, function<bool()> comparator,
+          MyDB_RecordPtr lhs, MyDB_RecordPtr rhs) {
     // 1. The sort phase -> Get sorted runs
 
     // (0) Define some variables
@@ -126,7 +127,7 @@ void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &s
 
         // 1. Get runSize of pages
         for (int i = 0; i < runSize && curr_idx <= page_num; i++){ // TWO conditions
-            MyDB_PageReaderWriter curr_page = sortIntoMe[curr_idx];
+            MyDB_PageReaderWriter curr_page = sortMe[curr_idx];
 
             // TODO: sort in-place or not?
             curr_page.getBytes(); // Load into RAM
