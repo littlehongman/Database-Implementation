@@ -60,7 +60,6 @@ mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_RecordIteratorAltPtr leftIter,
               MyDB_RecordPtr rhs) {
     vector<MyDB_PageReaderWriter> sorted_list;
     MyDB_PageReaderWriter sorted_page(*parent);
-    bool has_record = false;
 
     bool left_has_next = leftIter->advance();
     bool right_has_next = rightIter->advance();
