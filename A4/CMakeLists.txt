@@ -20,7 +20,7 @@ add_executable(A4
         Main/BufferMgr/headers/TableCompare.h
         Main/BufferMgr/source/MyDB_BufferManager.cc
         Main/BufferMgr/source/MyDB_Page.cc
-        Main/BufferTest/source/BufferQUnit.cc
+#        Main/BufferTest/source/BufferQUnit.cc
         Main/Catalog/headers/MyDB_AttType.h
         Main/Catalog/headers/MyDB_Catalog.h
         Main/Catalog/headers/MyDB_PageType.h
@@ -60,5 +60,6 @@ add_executable(A4
         Main/Record/headers/MyDB_Record.h
         Main/Record/source/MyDB_AttVal.cc
         Main/Record/source/MyDB_Record.cc
-        Main/RecordTest/source/RecordQUnit.cc
-        Main/SortTest/source/SortQUnit.cc)
+#        Main/RecordTest/source/RecordQUnit.cc
+#        Main/SortTest/source/SortQUnit.cc
+        )
