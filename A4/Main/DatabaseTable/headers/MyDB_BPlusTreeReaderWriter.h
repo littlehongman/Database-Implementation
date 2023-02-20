@@ -18,9 +18,13 @@
 using namespace std;
 class MyDB_PageReaderWriter;
 class MyDB_BPlusTreeReaderWriter;
+
+
 typedef shared_ptr <MyDB_BPlusTreeReaderWriter> MyDB_BPlusTreeReaderWriterPtr;
+typedef shared_ptr <MyDB_PageReaderWriter> MyDB_PageReaderWriterPtr;
 
 class MyDB_BPlusTreeReaderWriter : public MyDB_TableReaderWriter {
+// BPlusTreeReadWriter inherits the TableReadWriter
 
 public:
 
@@ -84,6 +88,8 @@ private:
 
 	// the number of the attribute that we are ordering on, in the data records
 	int whichAttIsOrdering;
+
+    MyDB_PageReaderWriterPtr rootPagePtr;
 
 };
 

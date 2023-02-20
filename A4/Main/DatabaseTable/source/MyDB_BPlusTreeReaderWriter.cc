@@ -11,15 +11,21 @@
 MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName, MyDB_TablePtr forMe, 
 	MyDB_BufferManagerPtr myBuffer) : MyDB_TableReaderWriter (forMe, myBuffer) {
 
+    MyDB_TableReaderWriter (forMe, myBuffer);
 	// find the ordering attribute
 	auto res = forMe->getSchema ()->getAttByName (orderOnAttName);
 
 	// remember information about the ordering attribute
 	orderingAttType = res.second;
-	whichAttIsOrdering = res.first;
+	whichAttIsOrdering = res.first; // the ith attribute of each record
 
 	// and the root location
 	rootLocation = getTable ()->getRootLocation ();
+
+    // Initialize root page
+    rootPagePtr = make_shared<MyDB_PageReaderWriter>(*getBufferMgr());
+    rootPagePtr->setType(MyDB_PageType::DirectoryPage);
+    rootPagePtr->append(getINRecord ());
 }
 
 MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getSortedRangeIteratorAlt (MyDB_AttValPtr, MyDB_AttValPtr) {
@@ -35,14 +41,24 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int, vector <MyDB_PageReaderWr
 	return false;
 }
 
-void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr) {
+void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
+    // rely on the append () private helper function (see below) on the root of the tree.
+    // Note that if the helper function indicates that a split has happened then this method needs to handle this by creating a new root that contains pointers to both the old root and the result of the split.
+    append(getTable()->lastPage(), appendMe);
+
+
+//    MyDB_TableReaderWriter :: append(appendMe);
+
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter, MyDB_RecordPtr) {
 	return nullptr;
 }
 
-MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int, MyDB_RecordPtr) {
+MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordPtr appendMe) {
+    // whichPage indicate the actual disk pageId
+
+
 	return nullptr;
 }
 
