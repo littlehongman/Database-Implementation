@@ -40,7 +40,7 @@ public:
         MyDB_RecordIteratorAltPtr getSortedRangeIteratorAlt (MyDB_AttValPtr low, MyDB_AttValPtr high);
 	
 	// append a record to the B+-Tree
-	void append (MyDB_RecordPtr appendMe);
+	void append (MyDB_RecordPtr appendMe) override;
 
 	// print the contents of the tree to the screen
 	void printTree ();
