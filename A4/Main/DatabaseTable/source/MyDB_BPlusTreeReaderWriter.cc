@@ -77,18 +77,34 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
         // If the page whichPage splits due to the insertion
         // (a split can occur at an internal node level or at a leaf node level)
         // then the append () method returns a new MyDB_INRecordPtr object that points to an appropriate internal node record.
-        MyDB_RecordPtr splitRoot = append(rootLocation, appendMe);
+        MyDB_RecordPtr newTopPtr = append(rootLocation, appendMe);
 
-        if (splitRoot == nullptr){
+        if (newTopPtr == nullptr){
             return;
         }
 
-        // TODO: deal with split => creating a new root that contains pointers to both the old root and the result of the split.
+        // TODO: Creating a new root that contains pointers to both the old root and the result of the split.
+        // If the root can fit new recordPtr => split the root page
         else{
+            MyDB_INRecordPtr newInRecordPtr = getINRecord(); // new max key
+            int newPageId = getNumPages();
 
+            // Create a new root page
+            MyDB_PageReaderWriter newRootPage = operator[](newPageId);
+            newRootPage.clear();
+            newRootPage.setType(MyDB_PageType::DirectoryPage);
 
+            // assign the old root location as its ptr
+            newInRecordPtr->setPtr(rootLocation);
+
+            //  Append the two recordPtr
+            newRootPage.append(newTopPtr);
+            newRootPage.append(newInRecordPtr);
+
+            // Set the new root location
+            rootLocation = newPageId;
+            getTable ()->setRootLocation (newPageId);
         }
-
 
     }
 }
@@ -208,7 +224,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     // 3. Set pointer to the new InRecordPtr
     newInRecordPtr->setPtr(newPageId);
 
-    
+
 	return newInRecordPtr;
 }
 
@@ -270,7 +286,8 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordP
             return nullptr;
         }
         else{
-            return newInRecordPtr;
+            // call recursive to line 259
+            return split(rootPage, newInRecordPtr);
         }
 
     }
