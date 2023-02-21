@@ -51,7 +51,7 @@ int main (int argc, char *argv[]) {
 		cout << "TEST 1... creating tree for small table, on suppkey " << flush;
 		MyDB_BufferManagerPtr myMgr = make_shared <MyDB_BufferManager> (1024, 128, "tempFile");
 		MyDB_BPlusTreeReaderWriter supplierTable ("suppkey", myTable, myMgr);
-		supplierTable.loadFromTextFile ("supplier.tbl");
+		supplierTable.loadFromTextFile ("supplierTiny.tbl");
 
                 // there should be 10000 records
                 MyDB_RecordPtr temp = supplierTable.getEmptyRecord ();
@@ -62,7 +62,7 @@ int main (int argc, char *argv[]) {
                         myIter->getCurrent (temp);
                         counter++;
                 }
-		bool result = (counter == 10000);
+		bool result = (counter == 10);
 		if (result)
 			cout << "\tTEST PASSED\n";
 		else

@@ -7,6 +7,7 @@
 #include "MyDB_PageReaderWriter.h"
 #include "MyDB_PageListIteratorSelfSortingAlt.h"
 #include "RecordComparator.h"
+#include <queue>          // std::queue
 
 MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName, MyDB_TablePtr forMe, 
 	MyDB_BufferManagerPtr myBuffer) : MyDB_TableReaderWriter (forMe, myBuffer) {
@@ -50,16 +51,17 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
 
         // Set the new root location
         rootLocation = 0;
+        getTable ()->setRootLocation (0);
 
         // Insert an INRecord into newInPage
-        MyDB_INRecordPtr newInRecord = getINRecord();
+        MyDB_INRecordPtr newInRecordPtr = getINRecord();
         // No need to set key here, the newInRecord key is default set to inf => Easies to build tree
 //        newInRecord->setKey(getKey(appendMe));
 
         // Pointer the new INRecord to the actual page, where corresponding data is stored
-        newInRecord->setPtr(1);
+        newInRecordPtr->setPtr(1);
 
-        newInPage.append(newInRecord);
+        newInPage.append(newInRecordPtr);
 
         // ------------ Leaf Page (Data node) ---------------
         // Create a leaf page
@@ -91,14 +93,132 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
     }
 }
 
-MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter, MyDB_RecordPtr) {
-	return nullptr;
+MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitMe, MyDB_RecordPtr andMe) {
+    MyDB_INRecordPtr newInRecordPtr = getINRecord();
+    int newPageId = getNumPages();
+    // Check the type of the page
+    // (1) Create correct recordPtr type to sort
+    MyDB_RecordPtr lhs, rhs;
+
+    // (2) Create correct recordPtr type to iterate
+    MyDB_RecordPtr tempRecordPtr;
+
+    // (3) Create new Page with correct type
+    MyDB_PageReaderWriter newPage = operator[](newPageId);
+    newPage.clear();
+
+    if (splitMe.getType() == MyDB_PageType::DirectoryPage){
+        lhs = getINRecord();
+        rhs = getINRecord();
+
+        tempRecordPtr = getINRecord();
+
+        newPage.setType(MyDB_PageType::DirectoryPage);
+    }
+    else {
+        lhs = getEmptyRecord();
+        rhs = getEmptyRecord();
+
+        tempRecordPtr = getEmptyRecord();
+
+        newPage.setType(MyDB_PageType::RegularPage);
+    }
+
+    auto comparator = buildComparator(lhs, rhs);
+
+    // 1. Sort the page in-place
+    splitMe.sortInPlace(comparator, lhs, rhs);
+
+    // 2. Split the page into two leaves (BIG STEP)
+    // (1) Count how many records is in the page, and how many is smaller than "andMe"
+    unsigned int totalCount = 1, newLargerThan = 0; // totalCount = 1 because we have a new page
+    MyDB_RecordIteratorPtr splitPageIter = splitMe.getIterator(tempRecordPtr);
+    comparator = buildComparator(andMe, tempRecordPtr);
+
+    // (2) Collect the positions of all records
+    // --> Use the same trick in PageReaderWriter (but using iterator)
+    // Read in the positions of all the records
+
+    queue<void *> positions;
+
+    while (splitPageIter->hasNext()){
+        // Get all the memory position of the records
+        positions.push(splitPageIter->getCurrentPointer());
+
+        totalCount ++;
+
+        // First getNext, then you can compare
+        splitPageIter->getNext();
+
+        if (!comparator()){
+            newLargerThan ++;
+        }
+    }
+
+    // (3) Create a new page and copy the content over
+    unsigned int i = 0, median = totalCount / 2;
+
+    // Construct the new page (smaller half without median)
+    while (i < median){
+        if (i == newLargerThan) { // If reach the "andMe" (as in the sorted order)
+            newPage.append(andMe);
+        }
+        else { // else, take a record from old page
+            tempRecordPtr->fromBinary(positions.front());
+            positions.pop();
+
+            newPage.append(tempRecordPtr);
+        }
+        i++;
+    }
+
+    // Construct the old page (larger half with median)
+    auto oldPageType = splitMe.getType();
+
+    // TODO: this will change pageType to regular page
+    splitMe.clear();
+    splitMe.setType(oldPageType);
+
+    newPage.clear();
+    newPage.setType(oldPageType);
+
+
+    while (i < totalCount){
+        if (i == newLargerThan) { // If reach the "andMe" (as in the sorted order)
+            newPage.append(andMe);
+        }
+        else { // else, take a record from old page
+            tempRecordPtr->fromBinary(positions.front());
+            positions.pop();
+
+            newPage.append(tempRecordPtr);
+        }
+
+        // IMPORTANT: get key of the median value
+        if (i == median){
+            if (i == newLargerThan)
+                newInRecordPtr->setKey(getKey(andMe));
+            else
+                newInRecordPtr->setKey(getKey(tempRecordPtr));
+        }
+
+        i++;
+    }
+
+    // 3. Set pointer to the new InRecordPtr
+    newInRecordPtr->setPtr(newPageId);
+
+
+	return newInRecordPtr;
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordPtr appendMe) {
     // First check what kind of page is whichPage
     // whichPage indicate the current page
     MyDB_PageReaderWriter rootPage = operator[](whichPage);
+
+    MyDB_INRecordPtr maxPtr = getINRecord ();
+
 
     // ------------ Leaf Page ----------------
     // We can just append to the end. However, we still need to deal with potential split
@@ -110,7 +230,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordP
         }
         // TODO: deal with split
         else {
-            
+            return split(rootPage, appendMe);
         }
     }
 
@@ -119,7 +239,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordP
 
     // Create an empty recordPtr to iterate the key in the page
     MyDB_INRecordPtr tempRecordPtr = getINRecord();
-    MyDB_RecordIteratorPtr rootRecordIter = rootPage.getIterator(tempRecordPtr);
+    MyDB_RecordIteratorPtr rootPageIter = rootPage.getIterator(tempRecordPtr);
 
     // Create a comparator to find the right spot to insert
     // If return true, then the tempRecordPtr is smaller
@@ -127,16 +247,33 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordP
 
     // Use while loop to find the first spot where tempRecordPtr has key larger than appendMe
     // TODO: Here might have problem
-    rootRecordIter->getNext();
-    while (!comparator() && rootRecordIter->hasNext()) {
-        rootRecordIter->getNext();
+    rootPageIter->getNext();
+    while (!comparator() && rootPageIter->hasNext()) {
+        rootPageIter->getNext();
     }
 
     // Now we find the spot // TODO: or the page has no records
     // If we are in the internal page => go down
     // If we are in the leaf page => append record
     if (rootPage.getType() == MyDB_PageType::DirectoryPage){
-        return append(tempRecordPtr->getPtr(), appendMe); // TODO: might have recursive problem
+        MyDB_RecordPtr newInRecordPtr = append(tempRecordPtr->getPtr(), appendMe);
+
+        if (newInRecordPtr == nullptr)
+            return nullptr;
+
+        // TODO: might have recursive problem
+
+        if (rootPage.append(newInRecordPtr)){
+            comparator = buildComparator(newInRecordPtr, maxPtr);
+
+            rootPage.sortInPlace(comparator, newInRecordPtr, maxPtr);
+
+            return nullptr;
+        }
+        else{
+            return newInRecordPtr;
+        }
+
     }
 
 
