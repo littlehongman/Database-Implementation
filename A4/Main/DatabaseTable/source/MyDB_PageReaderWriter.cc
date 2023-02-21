@@ -131,7 +131,7 @@ void MyDB_PageReaderWriter ::
 	std::stable_sort (positions.begin (), positions.end (), myComparator);
 
 	// and write the guys back
-	NUM_BYTES_USED = 2 * sizeof (size_t);
+	NUM_BYTES_USED = 2 * sizeof (size_t); // Get reset
 	myPage->wroteBytes ();	
 	for (void *pos : positions) {
 		lhs->fromBinary (pos);

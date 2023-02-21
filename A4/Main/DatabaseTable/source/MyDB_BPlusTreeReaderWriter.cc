@@ -162,6 +162,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     while (i < median){
         if (i == newLargerThan) { // If reach the "andMe" (as in the sorted order)
             newPage.append(andMe);
+
         }
         else { // else, take a record from old page
             tempRecordPtr->fromBinary(positions.front());
@@ -172,6 +173,8 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
         i++;
     }
 
+
+
     // Construct the old page (larger half with median)
     auto oldPageType = splitMe.getType();
 
@@ -179,19 +182,16 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     splitMe.clear();
     splitMe.setType(oldPageType);
 
-    newPage.clear();
-    newPage.setType(oldPageType);
-
 
     while (i < totalCount){
         if (i == newLargerThan) { // If reach the "andMe" (as in the sorted order)
-            newPage.append(andMe);
+            splitMe.append(andMe);
         }
         else { // else, take a record from old page
             tempRecordPtr->fromBinary(positions.front());
             positions.pop();
 
-            newPage.append(tempRecordPtr);
+            splitMe.append(tempRecordPtr);
         }
 
         // IMPORTANT: get key of the median value
@@ -208,7 +208,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     // 3. Set pointer to the new InRecordPtr
     newInRecordPtr->setPtr(newPageId);
 
-
+    
 	return newInRecordPtr;
 }
 
@@ -262,7 +262,6 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordP
             return nullptr;
 
         // TODO: might have recursive problem
-
         if (rootPage.append(newInRecordPtr)){
             comparator = buildComparator(newInRecordPtr, maxPtr);
 
