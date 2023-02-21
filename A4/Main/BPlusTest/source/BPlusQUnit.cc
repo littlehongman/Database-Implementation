@@ -41,7 +41,7 @@ int main (int argc, char *argv[]) {
 	mySchema->appendAtt (make_pair ("comment", make_shared <MyDB_StringAttType> ()));
 
 	// use the schema to create a table
-	MyDB_TablePtr myTable = make_shared <MyDB_Table> ("supplier", "supplier.bin", mySchema);
+    MyDB_TablePtr myTable = make_shared <MyDB_Table> ("supplier", "supplier.bin", mySchema);
 
 	cout << "Using small page size.\n";
 
@@ -52,7 +52,7 @@ int main (int argc, char *argv[]) {
 		MyDB_BufferManagerPtr myMgr = make_shared <MyDB_BufferManager> (1024, 128, "tempFile");
 		MyDB_BPlusTreeReaderWriter supplierTable ("suppkey", myTable, myMgr);
 		supplierTable.loadFromTextFile ("supplierTiny.tbl");
-
+        supplierTable.printTree();
                 // there should be 10000 records
                 MyDB_RecordPtr temp = supplierTable.getEmptyRecord ();
                 MyDB_RecordIteratorAltPtr myIter = supplierTable.getIteratorAlt ();
@@ -62,6 +62,7 @@ int main (int argc, char *argv[]) {
                         myIter->getCurrent (temp);
                         counter++;
                 }
+        cout << "counter: " << counter << endl;
 		bool result = (counter == 10);
 		if (result)
 			cout << "\tTEST PASSED\n";

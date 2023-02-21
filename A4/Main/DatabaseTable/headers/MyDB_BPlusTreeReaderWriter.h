@@ -91,6 +91,8 @@ private:
 
     MyDB_PageReaderWriterPtr rootPagePtr;
 
+    void printTree (int whichPage, int depth);
+
 };
 
 #endif

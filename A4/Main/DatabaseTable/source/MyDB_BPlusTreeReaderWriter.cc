@@ -285,6 +285,40 @@ MyDB_INRecordPtr MyDB_BPlusTreeReaderWriter :: getINRecord () {
 }
 
 void MyDB_BPlusTreeReaderWriter :: printTree () {
+    printTree (rootLocation, 0);
+}
+
+
+void MyDB_BPlusTreeReaderWriter::printTree(int whichPage, int depth) {
+    MyDB_PageReaderWriter pageToPrint = (*this)[whichPage];
+//    if (whichPage == rootLocation)
+//        cout << "Root: ";
+    // print out a leaf page
+    if (pageToPrint.getType () == MyDB_PageType :: RegularPage) {
+        MyDB_RecordPtr myRec = getEmptyRecord ();
+        MyDB_RecordIteratorAltPtr temp = pageToPrint.getIteratorAlt ();
+        while (temp->advance ()) {
+
+            temp->getCurrent (myRec);
+            for (int i = 0; i < depth; i++)
+                cout << "\t";
+            cout << myRec << "leaf " << "\n";
+        }
+
+        // print out a directory page
+    } else {
+
+        MyDB_INRecordPtr myRec = getINRecord ();
+        MyDB_RecordIteratorAltPtr temp = pageToPrint.getIteratorAlt ();
+        while (temp->advance ()) {
+
+            temp->getCurrent (myRec);
+            printTree (myRec->getPtr (), depth + 1);
+            for (int i = 0; i < depth; i++)
+                cout << "\t";
+            cout << (MyDB_RecordPtr) myRec <<"not leaf" << "\n";
+        }
+    }
 }
 
 MyDB_AttValPtr MyDB_BPlusTreeReaderWriter :: getKey (MyDB_RecordPtr fromMe) {
