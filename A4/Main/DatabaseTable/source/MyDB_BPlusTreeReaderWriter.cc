@@ -65,7 +65,7 @@ MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getRangeIteratorAlt (MyD
 
     return make_shared<MyDB_PageListIteratorSelfSortingAlt>(InRangePages, lhs, rhs, comparator, currPtr, lowComparator, highComparator,
                                                             false);
-    
+
 }
 
 
@@ -83,7 +83,7 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
     // if currKey <= low -> go next on the iterator
     // else if currKey > high -> descend to subtree => discover(subTreeId, list, low, high)
     // else (low < currKey <= high), split the range = (1) discover(subTreeId, list, low, currKey)  (2) go next on the iterator
-    bool foundLeaf = false;
+    bool keepTraverse = true;
     // 1. Create an iterator to iterate key value
     MyDB_INRecordPtr keyPtr = getINRecord();
     MyDB_RecordIteratorPtr currPageIter = currPage.getIterator(keyPtr);
@@ -112,11 +112,15 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
         }
         else { // Split the range
             // Lower half descend
-            foundLeaf = discoverPages(keyPtr->getPtr(), list, low, keyPtr->getKey());
+            keepTraverse = discoverPages(keyPtr->getPtr(), list, low, keyPtr->getKey());
 
             // Upper half keep traverse
             lowPtr->setKey(keyPtr->getKey());
 
+        }
+
+        if (!keepTraverse){
+            return false;
         }
 
     }
