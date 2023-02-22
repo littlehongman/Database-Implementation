@@ -72,6 +72,8 @@ private:
 	// constructs and returns an empty internal node record for this particular tree
 	MyDB_INRecordPtr getINRecord ();
 
+    MyDB_INRecordPtr getINRecord (const MyDB_AttValPtr& val);
+
 	// gets the search key from a LN record
 	MyDB_AttValPtr getKey (MyDB_RecordPtr fromMe);
 

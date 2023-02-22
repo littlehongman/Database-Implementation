@@ -24,17 +24,104 @@ MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName,
 	rootLocation = getTable ()->getRootLocation (); // Default value is -1
 }
 
-MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getSortedRangeIteratorAlt (MyDB_AttValPtr, MyDB_AttValPtr) {
-	return nullptr;
+MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getSortedRangeIteratorAlt (MyDB_AttValPtr low, MyDB_AttValPtr high) {
+    vector<MyDB_PageReaderWriter> InRangePages;
+
+    discoverPages(rootLocation, InRangePages, low, high);
+
+    // recordPtrs & comparator used to get sorted pages result
+    MyDB_RecordPtr lhs = getEmptyRecord(), rhs = getEmptyRecord();
+    function <bool ()> comparator = buildComparator(lhs, rhs);
+
+    // recordPtrs & comparators used to check if records is in range
+    MyDB_INRecordPtr lowPtr = getINRecord(low), highPtr = getINRecord(high);
+    MyDB_RecordPtr currPtr = getEmptyRecord();
+
+    function <bool ()> lowComparator = buildComparator(currPtr, lowPtr);
+    function <bool ()> highComparator = buildComparator(highPtr, currPtr);
+
+
+
+	return make_shared<MyDB_PageListIteratorSelfSortingAlt>(InRangePages, lhs, rhs, comparator, currPtr, lowComparator, highComparator,
+                                                            true);
 }
 
-MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getRangeIteratorAlt (MyDB_AttValPtr, MyDB_AttValPtr) {
-	return nullptr;
+MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getRangeIteratorAlt (MyDB_AttValPtr low, MyDB_AttValPtr high) {
+    vector<MyDB_PageReaderWriter> InRangePages;
+
+    discoverPages(rootLocation, InRangePages, low, high);
+
+    // recordPtrs & comparator used to get sorted pages result
+    MyDB_RecordPtr lhs = getEmptyRecord(), rhs = getEmptyRecord();
+    function <bool ()> comparator = buildComparator(lhs, rhs);
+
+    // recordPtrs & comparators used to check if records is in range
+    MyDB_INRecordPtr lowPtr = getINRecord(low), highPtr = getINRecord(high);
+    MyDB_RecordPtr currPtr = getEmptyRecord();
+
+    function <bool ()> lowComparator = buildComparator(currPtr, lowPtr);
+    function <bool ()> highComparator = buildComparator(highPtr, currPtr);
+
+
+    return make_shared<MyDB_PageListIteratorSelfSortingAlt>(InRangePages, lhs, rhs, comparator, currPtr, lowComparator, highComparator,
+                                                            false);
+    
 }
 
 
 bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_PageReaderWriter> &list, MyDB_AttValPtr low, MyDB_AttValPtr high) {
-	return false;
+	// Call recursively to push pages that are in the range
+    MyDB_PageReaderWriter currPage = operator[](whichPage);
+
+    if (currPage.getType() == MyDB_PageType::RegularPage){
+        list.push_back(currPage);
+
+        return true;
+    }
+
+    // Range find algorithm:
+    // if currKey <= low -> go next on the iterator
+    // else if currKey > high -> descend to subtree => discover(subTreeId, list, low, high)
+    // else (low < currKey <= high), split the range = (1) discover(subTreeId, list, low, currKey)  (2) go next on the iterator
+    bool foundLeaf = false;
+    // 1. Create an iterator to iterate key value
+    MyDB_INRecordPtr keyPtr = getINRecord();
+    MyDB_RecordIteratorPtr currPageIter = currPage.getIterator(keyPtr);
+
+    // 2. Create multiple recordPtrs & comparators
+    MyDB_INRecordPtr lowPtr = getINRecord(low);
+    MyDB_INRecordPtr highPtr = getINRecord(high);
+
+    function <bool ()> lowComparator = buildComparator(lowPtr, keyPtr);
+    function <bool ()> highComparator = buildComparator(highPtr, keyPtr);
+
+    // lowComparator: low < key => True
+    // highComparator: high < key => True
+
+    // 3. Use while loop to find the right spot
+    while (currPageIter->hasNext()) {
+        currPageIter->getNext();
+
+        if (!lowComparator()){ // key <= low
+            continue;
+        }
+        else if (highComparator()){ // high < key
+            discoverPages(keyPtr->getPtr(), list, low, high);
+
+            return false; // We don't want to go further
+        }
+        else { // Split the range
+            // Lower half descend
+            foundLeaf = discoverPages(keyPtr->getPtr(), list, low, keyPtr->getKey());
+
+            // Upper half keep traverse
+            lowPtr->setKey(keyPtr->getKey());
+
+        }
+
+    }
+
+    return false;
 }
 
 void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
@@ -299,6 +386,12 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordP
 MyDB_INRecordPtr MyDB_BPlusTreeReaderWriter :: getINRecord () {
 	return make_shared <MyDB_INRecord> (orderingAttType->createAttMax ());
 }
+
+
+MyDB_INRecordPtr MyDB_BPlusTreeReaderWriter :: getINRecord (const MyDB_AttValPtr& val) {
+    return make_shared <MyDB_INRecord> (val);
+}
+
 
 void MyDB_BPlusTreeReaderWriter :: printTree () {
     printTree (rootLocation, 0);
