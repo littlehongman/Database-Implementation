@@ -6,6 +6,7 @@
 #include "MyDB_BPlusTreeReaderWriter.h"
 #include "MyDB_PageReaderWriter.h"
 #include "MyDB_PageListIteratorSelfSortingAlt.h"
+#include "MyDB_PageListIteratorAlt.h"
 #include "RecordComparator.h"
 #include <queue>          // std::queue
 
@@ -25,9 +26,12 @@ MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName,
 }
 
 MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getSortedRangeIteratorAlt (MyDB_AttValPtr low, MyDB_AttValPtr high) {
-    vector<MyDB_PageReaderWriter> InRangePages;
+    vector<MyDB_PageReaderWriter> inRangePages;
 
-    discoverPages(rootLocation, InRangePages, low, high);
+    discoverPages(rootLocation, inRangePages, low, high);
+
+    if (inRangePages.size() == 0)
+        return make_shared<MyDB_PageListIteratorAlt>(inRangePages);
 
     // recordPtrs & comparator used to get sorted pages result
     MyDB_RecordPtr lhs = getEmptyRecord(), rhs = getEmptyRecord();
@@ -42,14 +46,18 @@ MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getSortedRangeIteratorAl
 
 
 
-	return make_shared<MyDB_PageListIteratorSelfSortingAlt>(InRangePages, lhs, rhs, comparator, currPtr, lowComparator, highComparator,
+	return make_shared<MyDB_PageListIteratorSelfSortingAlt>(inRangePages, lhs, rhs, comparator, currPtr, lowComparator, highComparator,
                                                             true);
 }
 
 MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getRangeIteratorAlt (MyDB_AttValPtr low, MyDB_AttValPtr high) {
-    vector<MyDB_PageReaderWriter> InRangePages;
+    vector<MyDB_PageReaderWriter> inRangePages;
 
-    discoverPages(rootLocation, InRangePages, low, high);
+    discoverPages(rootLocation, inRangePages, low, high);
+
+    if (inRangePages.size() == 0)
+        return make_shared<MyDB_PageListIteratorAlt>(inRangePages);
+
 
     // recordPtrs & comparator used to get sorted pages result
     MyDB_RecordPtr lhs = getEmptyRecord(), rhs = getEmptyRecord();
@@ -63,7 +71,7 @@ MyDB_RecordIteratorAltPtr MyDB_BPlusTreeReaderWriter :: getRangeIteratorAlt (MyD
     function <bool ()> highComparator = buildComparator(highPtr, currPtr);
 
 
-    return make_shared<MyDB_PageListIteratorSelfSortingAlt>(InRangePages, lhs, rhs, comparator, currPtr, lowComparator, highComparator,
+    return make_shared<MyDB_PageListIteratorSelfSortingAlt>(inRangePages, lhs, rhs, comparator, currPtr, lowComparator, highComparator,
                                                             false);
 
 }
