@@ -9,7 +9,7 @@
 #include "RecordComparator.h"
 #include <queue>          // std::queue
 
-MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName, MyDB_TablePtr forMe, 
+MyDB_BPlusTreeReaderWriter :: MyDB_BPlusTreeReaderWriter (string orderOnAttName, MyDB_TablePtr forMe,
 	MyDB_BufferManagerPtr myBuffer) : MyDB_TableReaderWriter (forMe, myBuffer) {
 
     MyDB_TableReaderWriter (forMe, myBuffer);
@@ -80,32 +80,34 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
     }
 
     // Range find algorithm:
-    // if currKey <= low -> go next on the iterator
-    // else if currKey > high -> descend to subtree => discover(subTreeId, list, low, high)
-    // else (low < currKey <= high), split the range = (1) discover(subTreeId, list, low, currKey)  (2) go next on the iterator
+    // if currKey < low -> go next on the iterator
+    // else if currKey > high -> descend to subtree => discover(subTreeId, list, low, high), then return false
+    // else (low <= currKey <= high), split the range = (1) discover(subTreeId, list, low, currKey)  (2) go next on the iterator
     bool keepTraverse = true;
     // 1. Create an iterator to iterate key value
     MyDB_INRecordPtr keyPtr = getINRecord();
-    MyDB_RecordIteratorPtr currPageIter = currPage.getIterator(keyPtr);
+    MyDB_RecordIteratorAltPtr currPageIter = currPage.getIteratorAlt();
 
     // 2. Create multiple recordPtrs & comparators
     MyDB_INRecordPtr lowPtr = getINRecord(low);
     MyDB_INRecordPtr highPtr = getINRecord(high);
 
-    function <bool ()> lowComparator = buildComparator(lowPtr, keyPtr);
+    function <bool ()> lowComparator = buildComparator(keyPtr, lowPtr);
     function <bool ()> highComparator = buildComparator(highPtr, keyPtr);
 
-    // lowComparator: low < key => True
+
+    // lowComparator: key < low => True
     // highComparator: high < key => True
 
     // 3. Use while loop to find the right spot
-    while (currPageIter->hasNext()) {
-        currPageIter->getNext();
 
-        if (!lowComparator()){ // key <= low
+    while (keepTraverse && currPageIter->advance()) {
+        currPageIter->getCurrent(keyPtr);
+
+        if (lowComparator()){ // key < low
             continue;
         }
-        else if (highComparator()){ // high < key
+        else if (highComparator()){ // high < currKey
             discoverPages(keyPtr->getPtr(), list, low, high);
 
             return false; // We don't want to go further
@@ -115,17 +117,14 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
             keepTraverse = discoverPages(keyPtr->getPtr(), list, low, keyPtr->getKey());
 
             // Upper half keep traverse
-            lowPtr->setKey(keyPtr->getKey());
+            // No need to further modify anything
 
+//            currPageIter->getCurrent(lowPtr);
+           // lowPtr->setKey(keyPtr->getKey());
         }
-
-        if (!keepTraverse){
-            return false;
-        }
-
     }
 
-    return false;
+    return true;
 }
 
 void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
@@ -277,6 +276,15 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
 
             newPage.append(tempRecordPtr);
         }
+
+        // IMPORTANT: get key of the median value
+        if (i == median - 1){
+            if (i == newLargerThan)
+                newInRecordPtr->setKey(getKey(andMe));
+            else
+                newInRecordPtr->setKey(getKey(tempRecordPtr));
+        }
+
         i++;
     }
 
@@ -299,14 +307,6 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
             positions.pop();
 
             splitMe.append(tempRecordPtr);
-        }
-
-        // IMPORTANT: get key of the median value
-        if (i == median){
-            if (i == newLargerThan)
-                newInRecordPtr->setKey(getKey(andMe));
-            else
-                newInRecordPtr->setKey(getKey(tempRecordPtr));
         }
 
         i++;
@@ -356,6 +356,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordP
     // TODO: Here might have problem
     rootPageIter->getNext();
     while (!comparator() && rootPageIter->hasNext()) {
+
         rootPageIter->getNext();
     }
 
@@ -437,11 +438,11 @@ void MyDB_BPlusTreeReaderWriter::printTree(int whichPage, int depth) {
 MyDB_AttValPtr MyDB_BPlusTreeReaderWriter :: getKey (MyDB_RecordPtr fromMe) {
 
 	// in this case, got an IN record
-	if (fromMe->getSchema () == nullptr) 
+	if (fromMe->getSchema () == nullptr)
 		return fromMe->getAtt (0)->getCopy ();
 
 	// in this case, got a data record
-	else 
+	else
 		return fromMe->getAtt (whichAttIsOrdering)->getCopy ();
 }
 
@@ -451,7 +452,7 @@ function <bool ()>  MyDB_BPlusTreeReaderWriter :: buildComparator (MyDB_RecordPt
 
 	// in this case, the LHS is an IN record
 	if (lhs->getSchema () == nullptr) {
-		lhAtt = lhs->getAtt (0);	
+		lhAtt = lhs->getAtt (0);
 
 	// here, it is a regular data record
 	} else {
@@ -460,13 +461,13 @@ function <bool ()>  MyDB_BPlusTreeReaderWriter :: buildComparator (MyDB_RecordPt
 
 	// in this case, the LHS is an IN record
 	if (rhs->getSchema () == nullptr) {
-		rhAtt = rhs->getAtt (0);	
+		rhAtt = rhs->getAtt (0);
 
 	// here, it is a regular data record
 	} else {
 		rhAtt = rhs->getAtt (whichAttIsOrdering);
 	}
-	
+
 	// now, build the comparison lambda and return
 	if (orderingAttType->promotableToInt ()) {
 		return [lhAtt, rhAtt] {return lhAtt->toInt () < rhAtt->toInt ();};
