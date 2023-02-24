@@ -128,11 +128,13 @@ void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &s
         for (int i = 0; i < runSize && curr_idx <= page_num; i++){ // TWO conditions
             MyDB_PageReaderWriter curr_page = sortMe[curr_idx];
 
-            // TODO: sort in-place or not?
-            curr_page.getBytes(); // Load into RAM
-            curr_page.sortInPlace(comparator, lhs, rhs); // Sort individual page
 
-            run_pages.push(curr_page.getIteratorAlt()); // Push iterator into queue
+            curr_page.getBytes(); // Load into RAM
+
+            // Cannot use sortInPlace, so you don't change the contents of the page.
+//          curr_page.sortInPlace(comparator, lhs, rhs); // Sort individual page
+
+            run_pages.push(curr_page.sort(comparator, lhs, rhs)->getIteratorAlt()); // Push iterator into queue
 
             curr_idx ++; // increment curr_idx
         }
