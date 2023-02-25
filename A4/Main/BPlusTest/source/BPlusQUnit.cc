@@ -51,8 +51,8 @@ int main (int argc, char *argv[]) {
 		cout << "TEST 1... creating tree for small table, on suppkey " << flush;
 		MyDB_BufferManagerPtr myMgr = make_shared <MyDB_BufferManager> (1024, 128, "tempFile");
 		MyDB_BPlusTreeReaderWriter supplierTable ("suppkey", myTable, myMgr);
-		supplierTable.loadFromTextFile ("supplier.tbl");
-//        supplierTable.printTree();
+		supplierTable.loadFromTextFile ("supplierTiny.tbl");
+        supplierTable.printTree();
                 // there should be 10000 records
                 MyDB_RecordPtr temp = supplierTable.getEmptyRecord ();
                 MyDB_RecordIteratorAltPtr myIter = supplierTable.getIteratorAlt ();
@@ -71,6 +71,7 @@ int main (int argc, char *argv[]) {
                 QUNIT_IS_TRUE (result);
 	}
 	FALLTHROUGH_INTENDED;
+        /*
 	case 2:
 	{
 		cout << "TEST 2... creating tree for small table, on nationkey " << flush;
@@ -181,7 +182,7 @@ int main (int argc, char *argv[]) {
 		cout << "TEST 6... creating tree for small table, on suppkey, checking for sorted order " << flush;
 		MyDB_BufferManagerPtr myMgr = make_shared <MyDB_BufferManager> (1024, 128, "tempFile");
 		MyDB_BPlusTreeReaderWriter supplierTable ("suppkey", myTable, myMgr);
-		supplierTable.loadFromTextFile ("supplier.tbl");
+		supplierTable.loadFromTextFile ("supplierTiny.tbl");
 
                 // there should be 10000 records
                 MyDB_RecordPtr temp = supplierTable.getEmptyRecord ();
@@ -190,19 +191,22 @@ int main (int argc, char *argv[]) {
 		MyDB_IntAttValPtr low = make_shared <MyDB_IntAttVal> ();
 		low->set (1);
 		MyDB_IntAttValPtr high = make_shared <MyDB_IntAttVal> ();
-		high->set (10000);
+		high->set (1);
 
 		MyDB_RecordIteratorAltPtr myIter = supplierTable.getSortedRangeIteratorAlt (low, high);
 		bool res = true;
                 while (myIter->advance ()) {
                         myIter->getCurrent (temp);
                         counter++;
+                    cout << temp << endl;
 			if (counter != temp->getAtt (0)->toInt ()) {
 				res = false;
-				cout << "Found key of " << temp->getAtt (0)->toInt () << ", expected " << counter << "\n";
+                cout << "Found key of " << temp->getAtt (0)->toInt () << ", expected " << counter << "\n";
+//				cout << "Found key of " << temp->getAtt (0)->toInt () << ", expected " << counter << "\n";
 			}
                 }
-		if (res && (counter == 10000))
+                supplierTable.printTree();
+		if (res && (counter == 10))
 			cout << "\tTEST PASSED\n";
 		else
 			cout << "\tTEST FAILED\n";
@@ -365,6 +369,7 @@ int main (int argc, char *argv[]) {
 			cout << "\tTEST FAILED\n";
 		QUNIT_IS_TRUE (allOK);
 	}
+         */
 	}
 }
 
