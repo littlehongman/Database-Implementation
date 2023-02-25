@@ -418,19 +418,19 @@ void MyDB_BPlusTreeReaderWriter :: printTree () {
 
 void MyDB_BPlusTreeReaderWriter::printTree(MyDB_PageReaderWriter page) {
     if (page.getType() == MyDB_PageType::RegularPage) {
-        MyDB_RecordPtr myRec = getEmptyRecord();
-        MyDB_RecordIteratorAltPtr temp = page.getIteratorAlt();
-        while (temp->advance()) {
-            temp->getCurrent(myRec);
-            cout << myRec << "leaf " << "\n";
+        MyDB_RecordPtr tempRecPtr = getEmptyRecord();
+        MyDB_RecordIteratorPtr recIter = page.getIterator(tempRecPtr);
+        while (recIter->hasNext()) {
+            recIter->getNext();
+            cout << tempRecPtr << "leaf " << "\n";
         }
     } else {
-        MyDB_INRecordPtr myRec = getINRecord();
-        MyDB_RecordIteratorAltPtr temp = page.getIteratorAlt();
-        while (temp->advance()) {
-            temp->getCurrent(myRec);
-            cout << myRec << "node" << "\n";
-            printTree(operator[](myRec->getPtr()));
+        MyDB_INRecordPtr tempRecPtr = getINRecord();
+        MyDB_RecordIteratorPtr recIter = page.getIterator(tempRecPtr);
+        while (recIter->hasNext()) {
+            recIter->getNext();
+            cout << tempRecPtr << "node" << "\n";
+            printTree(operator[](tempRecPtr->getPtr()));
         }
     }
 }
