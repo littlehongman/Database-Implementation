@@ -270,10 +270,15 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     }
 
     // (3) Create a new page and copy the content over
-    unsigned int i = 0, median = totalCount / 2;
+    unsigned int i = 0, median = 0;
+
+    if (totalCount % 2)
+        median = totalCount / 2;
+    else
+        median = totalCount / 2 - 1;
 
     // Construct the new page (smaller half without median)
-    while (i < median){
+    while (i <= median){
         if (i == newLargerThan) { // If reach the "andMe" (as in the sorted order)
             newPage.append(andMe);
 
@@ -286,7 +291,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
         }
 
         // IMPORTANT: get key of the median value
-        if (i == median - 1){
+        if (i == median){
             if (i == newLargerThan)
                 newInRecordPtr->setKey(getKey(andMe));
             else
