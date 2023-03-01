@@ -66,4 +66,4 @@ add_executable(A5
         Main/SQL/headers/ParserHelperFunctions.h
         Main/SQL/headers/ParserTypes.h
         Main/SQL/source/ParserHelperFunctions.cc
-        Main/SQLTest/source/main.cc)
+        Main/SQLTest/source/main.cc Main/SQL/source/Parser.c Main/SQL/source/Parser.h Main/SQL/source/Lexer.c)
