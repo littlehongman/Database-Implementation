@@ -422,48 +422,18 @@ void MyDB_BPlusTreeReaderWriter::printTree(MyDB_PageReaderWriter page) {
         MyDB_RecordIteratorPtr recIter = page.getIterator(tempRecPtr);
         while (recIter->hasNext()) {
             recIter->getNext();
-            cout << tempRecPtr << "leaf " << "\n";
+            cout << tempRecPtr << "\n";
         }
     } else {
         MyDB_INRecordPtr tempRecPtr = getINRecord();
         MyDB_RecordIteratorPtr recIter = page.getIterator(tempRecPtr);
         while (recIter->hasNext()) {
             recIter->getNext();
-            cout << tempRecPtr << "node" << "\n";
+            
             printTree(operator[](tempRecPtr->getPtr()));
-        }
-    }
-}
 
-
-void MyDB_BPlusTreeReaderWriter::printTree(int whichPage, int depth) {
-    MyDB_PageReaderWriter pageToPrint = (*this)[whichPage];
-//    if (whichPage == rootLocation)
-//        cout << "Root: ";
-    // print out a leaf page
-    if (pageToPrint.getType () == MyDB_PageType :: RegularPage) {
-        MyDB_RecordPtr myRec = getEmptyRecord ();
-        MyDB_RecordIteratorAltPtr temp = pageToPrint.getIteratorAlt ();
-        while (temp->advance ()) {
-
-            temp->getCurrent (myRec);
-            for (int i = 0; i < depth; i++)
-                cout << "\t";
-            cout << myRec << "leaf " << "\n";
-        }
-
-        // print out a directory page
-    } else {
-
-        MyDB_INRecordPtr myRec = getINRecord ();
-        MyDB_RecordIteratorAltPtr temp = pageToPrint.getIteratorAlt ();
-        while (temp->advance ()) {
-
-            temp->getCurrent (myRec);
-            printTree (myRec->getPtr (), depth + 1);
-            for (int i = 0; i < depth; i++)
-                cout << "\t";
-            cout << (MyDB_RecordPtr) myRec <<"not leaf" << "\n";
+            // Upcasting the InRecordPtr to perform write
+            cout << (MyDB_RecordPtr)tempRecPtr << "\n";
         }
     }
 }
