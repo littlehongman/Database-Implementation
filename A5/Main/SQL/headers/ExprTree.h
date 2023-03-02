@@ -3,8 +3,10 @@
 #define SQL_EXPRESSIONS
 
 #include "MyDB_AttType.h"
+#include "MyDB_Catalog.h"
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 // create a smart pointer for database tables
 using namespace std;
@@ -18,6 +20,10 @@ class ExprTree {
 
 public:
 	virtual string toString () = 0;
+
+    // This will check Make sure that all of the referenced attributes exist, and are correctly attached to the tables that are indicated in the query.
+    virtual bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap) = 0;
+
 	virtual ~ExprTree () {}
 };
 
@@ -37,7 +43,11 @@ public:
 		} else {
 			return "bool[false]";
 		}
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return true;
+    }
 };
 
 class DoubleLiteral : public ExprTree {
@@ -52,7 +62,11 @@ public:
 
 	string toString () {
 		return "double[" + to_string (myVal) + "]";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return true;
+    }
 
 	~DoubleLiteral () {}
 };
@@ -72,6 +86,10 @@ public:
 		return "int[" + to_string (myVal) + "]";
 	}
 
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return true;
+    }
+
 	~IntLiteral () {}
 };
 
@@ -90,6 +108,10 @@ public:
 		return "string[" + myVal + "]";
 	}
 
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return true;
+    }
+
 	~StringLiteral () {}
 };
 
@@ -107,7 +129,29 @@ public:
 
 	string toString () {
 		return "[" + tableName + "_" + attName + "]";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        // Check if the alias exists
+        if (aliasMap.find(tableName) == aliasMap.end()){
+            cout << "The alias " << tableName << " does not exist in the table" << endl;
+            return false;
+        }
+
+        string key = aliasMap[tableName] + "." + attName + "." + "type";
+        string temp = "";
+
+        // Check if the attributes exist in the corresponding table
+        if (!myCatalog->getString(key, temp)){
+            cout << "The attribute " << attName << " does not exist in the table" << aliasMap[tableName] << endl;
+            cout << "OR" << endl;
+            cout << "The attribute " << attName << " is attached to the wrong table" << endl;
+
+            return false;
+        }
+
+        return true;
+    }
 
 	~Identifier () {}
 };
@@ -128,7 +172,11 @@ public:
 
 	string toString () {
 		return "- (" + lhs->toString () + ", " + rhs->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
 
 	~MinusOp () {}
 };
@@ -149,7 +197,11 @@ public:
 
 	string toString () {
 		return "+ (" + lhs->toString () + ", " + rhs->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
 
 	~PlusOp () {}
 };
@@ -170,7 +222,11 @@ public:
 
 	string toString () {
 		return "* (" + lhs->toString () + ", " + rhs->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
 
 	~TimesOp () {}
 };
@@ -191,7 +247,11 @@ public:
 
 	string toString () {
 		return "/ (" + lhs->toString () + ", " + rhs->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
 
 	~DivideOp () {}
 };
@@ -212,7 +272,11 @@ public:
 
 	string toString () {
 		return "> (" + lhs->toString () + ", " + rhs->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
 
 	~GtOp () {}
 };
@@ -233,7 +297,11 @@ public:
 
 	string toString () {
 		return "< (" + lhs->toString () + ", " + rhs->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
 
 	~LtOp () {}
 };
@@ -254,7 +322,11 @@ public:
 
 	string toString () {
 		return "!= (" + lhs->toString () + ", " + rhs->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
 
 	~NeqOp () {}
 };
@@ -275,7 +347,11 @@ public:
 
 	string toString () {
 		return "|| (" + lhs->toString () + ", " + rhs->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
 
 	~OrOp () {}
 };
@@ -296,7 +372,11 @@ public:
 
 	string toString () {
 		return "== (" + lhs->toString () + ", " + rhs->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
 
 	~EqOp () {}
 };
@@ -315,7 +395,12 @@ public:
 
 	string toString () {
 		return "!(" + child->toString () + ")";
-	}	
+	}
+
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return child->isValid(myCatalog, aliasMap);
+    }
 
 	~NotOp () {}
 };
@@ -334,7 +419,11 @@ public:
 
 	string toString () {
 		return "sum(" + child->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return child->isValid(myCatalog, aliasMap);
+    }
 
 	~SumOp () {}
 };
@@ -353,7 +442,11 @@ public:
 
 	string toString () {
 		return "avg(" + child->toString () + ")";
-	}	
+	}
+
+    bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return child->isValid(myCatalog, aliasMap);
+    }
 
 	~AvgOp () {}
 };

@@ -274,14 +274,19 @@ public:
 
             // Insert the map
             aliasMap[a.second] = a.first;
-
-            cout << "\t" << a.first << " AS " << a.second << "\n";
         }
 
         // 2. Make sure that all of the referenced attributes exist, and are correctly attached to the tables that are indicated in the query.
         // (1) Traverse all attributes from "SQL SELECT CLAUSE", and use myCatalog to check if exists
         for (auto a : valuesToSelect) {
+            if (!a->isValid(myCatalog, aliasMap))
+                return false;
+        }
 
+        // (1) Traverse all attributes from "SQL WHERE CLAUSE", and use myCatalog to check if exists
+        for (auto a : allDisjunctions) {
+            if (!a->isValid(myCatalog, aliasMap))
+                return false;
         }
 
 
