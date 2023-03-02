@@ -268,7 +268,7 @@ public:
             key = a.first + ".attList";
 
             if (!myCatalog->getString(key, temp)){
-                cout << "The table " << a.first << " does not exist in the database" << endl;
+                cout << "Error: The table " << a.first << " does not exist in the database" << endl;
                 return false;
             }
 
@@ -283,9 +283,22 @@ public:
                 return false;
         }
 
-        // (1) Traverse all attributes from "SQL WHERE CLAUSE", and use myCatalog to check if exists
+        // (2) Traverse all attributes from "SQL WHERE CLAUSE", and use myCatalog to check if exists
         for (auto a : allDisjunctions) {
             if (!a->isValid(myCatalog, aliasMap))
+                return false;
+        }
+
+        // 3. Make sure that there are no type mismatches in any expressions.
+        // (1) Traverse all attributes from "SQL SELECT CLAUSE", and use myCatalog to check if exists
+        for (auto a : valuesToSelect) {
+            if (a->getType(myCatalog, aliasMap) == "NULL")
+                return false;
+        }
+
+        // (2) Traverse all attributes from "SQL WHERE CLAUSE", and use myCatalog to check if exists
+        for (auto a : allDisjunctions) {
+            if (a->getType(myCatalog, aliasMap) == "NULL")
                 return false;
         }
 

@@ -24,6 +24,9 @@ public:
     // This will check Make sure that all of the referenced attributes exist, and are correctly attached to the tables that are indicated in the query.
     virtual bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap) = 0;
 
+    // This will return the type of the expression
+    virtual string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap) = 0;
+
 	virtual ~ExprTree () {}
 };
 
@@ -48,6 +51,10 @@ public:
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return true;
     }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return "bool";
+    }
 };
 
 class DoubleLiteral : public ExprTree {
@@ -66,6 +73,10 @@ public:
 
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return true;
+    }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return "double";
     }
 
 	~DoubleLiteral () {}
@@ -90,6 +101,10 @@ public:
         return true;
     }
 
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return "int";
+    }
+
 	~IntLiteral () {}
 };
 
@@ -110,6 +125,10 @@ public:
 
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return true;
+    }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        return "string";
     }
 
 	~StringLiteral () {}
@@ -134,7 +153,7 @@ public:
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         // Check if the alias exists
         if (aliasMap.find(tableName) == aliasMap.end()){
-            cout << "The alias " << tableName << " does not exist in the table" << endl;
+            cout << "Error: The alias " << tableName << " does not exist in the table" << endl;
             return false;
         }
 
@@ -143,14 +162,23 @@ public:
 
         // Check if the attributes exist in the corresponding table
         if (!myCatalog->getString(key, temp)){
-            cout << "The attribute " << attName << " does not exist in the table" << aliasMap[tableName] << endl;
-            cout << "OR" << endl;
-            cout << "The attribute " << attName << " is attached to the wrong table" << endl;
+            cout << "Error: The attribute " << attName << " does not exist in the table" << aliasMap[tableName] << endl;
+            cout << "       OR" << endl;
+            cout << "       The attribute " << attName << " is attached to the wrong table" << endl;
 
             return false;
         }
 
         return true;
+    }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string key = aliasMap[tableName] + "." + attName + "." + "type";
+        string temp = "";
+
+        myCatalog->getString(key, temp);
+
+        return temp;
     }
 
 	~Identifier () {}
@@ -178,6 +206,25 @@ public:
         return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
     }
 
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string lhsType = lhs->getType(myCatalog, aliasMap);
+        string rhsType = rhs->getType(myCatalog, aliasMap);
+
+        if (lhsType == "int" && rhsType == "int"){
+            return "int";
+        }
+        else if (lhsType == "double" && rhsType == "double"){
+            return "double";
+        }
+        else if ((lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double")){
+            return "double";
+        }
+        else {
+            cout << "Error: Attempted to subtract values of type " << lhsType << " and type " << rhsType << endl;
+            return "NULL";
+        }
+    }
+
 	~MinusOp () {}
 };
 
@@ -201,6 +248,28 @@ public:
 
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string lhsType = lhs->getType(myCatalog, aliasMap);
+        string rhsType = rhs->getType(myCatalog, aliasMap);
+
+        if (lhsType == "int" && rhsType == "int"){
+            return "int";
+        }
+        else if (lhsType == "double" && rhsType == "double"){
+            return "double";
+        }
+        else if ((lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double")){
+            return "double";
+        }
+        else if (lhsType == "string" && rhsType == "string"){ // String can be concatenated with string
+            return "string";
+        }
+        else {
+            cout << "Error: Attempted to add values of type " << lhsType << " and type " << rhsType << endl;
+            return "NULL";
+        }
     }
 
 	~PlusOp () {}
@@ -228,6 +297,26 @@ public:
         return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
     }
 
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string lhsType = lhs->getType(myCatalog, aliasMap);
+        string rhsType = rhs->getType(myCatalog, aliasMap);
+
+        if (lhsType == "int" && rhsType == "int"){
+            return "int";
+        }
+        else if (lhsType == "double" && rhsType == "double"){
+            return "double";
+        }
+        else if ((lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double")){
+            return "double";
+        }
+        else {
+            cout << "Error: Attempted to multiply values of type " << lhsType << " and type " << rhsType << endl;
+            return "NULL";
+        }
+    }
+
+
 	~TimesOp () {}
 };
 
@@ -251,6 +340,25 @@ public:
 
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string lhsType = lhs->getType(myCatalog, aliasMap);
+        string rhsType = rhs->getType(myCatalog, aliasMap);
+
+        if (lhsType == "int" && rhsType == "int"){
+            return "int";
+        }
+        else if (lhsType == "double" && rhsType == "double"){
+            return "double";
+        }
+        else if ((lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double")){
+            return "double";
+        }
+        else {
+            cout << "Error: Attempted to divide values of type " << lhsType << " and type " << rhsType << endl;
+            return "NULL";
+        }
     }
 
 	~DivideOp () {}
@@ -278,6 +386,21 @@ public:
         return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
     }
 
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string lhsType = lhs->getType(myCatalog, aliasMap);
+        string rhsType = rhs->getType(myCatalog, aliasMap);
+
+        if ((lhsType == "int" && rhsType == "int") || (lhsType == "double" && rhsType == "double") ||
+            (lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double") ||
+            (lhsType == "string" && rhsType == "string")) {
+            return "gt";
+        }
+        else {
+            cout << "Error: Attempted to perform 'greater than' comparison on values of type " << lhsType << " and type " << rhsType << endl;
+            return "NULL";
+        }
+    }
+
 	~GtOp () {}
 };
 
@@ -301,6 +424,21 @@ public:
 
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string lhsType = lhs->getType(myCatalog, aliasMap);
+        string rhsType = rhs->getType(myCatalog, aliasMap);
+
+        if ((lhsType == "int" && rhsType == "int") || (lhsType == "double" && rhsType == "double") ||
+            (lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double") ||
+            (lhsType == "string" && rhsType == "string")) {
+            return "lt";
+        }
+        else {
+            cout << "Error: Attempted to perform 'less than' comparison on values of type " << lhsType << " and type " << rhsType << endl;
+            return "NULL";
+        }
     }
 
 	~LtOp () {}
@@ -328,6 +466,21 @@ public:
         return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
     }
 
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string lhsType = lhs->getType(myCatalog, aliasMap);
+        string rhsType = rhs->getType(myCatalog, aliasMap);
+
+        if ((lhsType == "int" && rhsType == "int") || (lhsType == "double" && rhsType == "double") ||
+            (lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double") ||
+            (lhsType == "string" && rhsType == "string")) {
+            return "neq";
+        }
+        else {
+            cout << "Error: Attempted to perform 'not equal' comparison on values of type " << lhsType << " and type " << rhsType << endl;
+            return "NULL";
+        }
+    }
+
 	~NeqOp () {}
 };
 
@@ -351,6 +504,18 @@ public:
 
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
+    }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string lhsType = lhs->getType(myCatalog, aliasMap);
+        string rhsType = rhs->getType(myCatalog, aliasMap);
+
+        if (lhsType == "NULL" || rhsType == "NULL"){
+            return "NULL";
+        }
+        else {
+            return "or";
+        }
     }
 
 	~OrOp () {}
@@ -378,6 +543,21 @@ public:
         return lhs->isValid(myCatalog, aliasMap) && rhs->isValid(myCatalog, aliasMap);
     }
 
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string lhsType = lhs->getType(myCatalog, aliasMap);
+        string rhsType = rhs->getType(myCatalog, aliasMap);
+
+        if ((lhsType == "int" && rhsType == "int") || (lhsType == "double" && rhsType == "double") ||
+            (lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double") ||
+            (lhsType == "string" && rhsType == "string")) {
+            return "eq";
+        }
+        else {
+            cout << "Error: Attempted to perform 'equal' comparison on values of type " << lhsType << " and type " << rhsType << endl;
+            return "NULL";
+        }
+    }
+
 	~EqOp () {}
 };
 
@@ -400,6 +580,17 @@ public:
 
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return child->isValid(myCatalog, aliasMap);
+    }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string childType = child->getType(myCatalog, aliasMap);
+
+        if (childType == "NULL"){
+            return "NULL";
+        }
+        else {
+            return "or";
+        }
     }
 
 	~NotOp () {}
@@ -425,6 +616,17 @@ public:
         return child->isValid(myCatalog, aliasMap);
     }
 
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string childType = child->getType(myCatalog, aliasMap);
+
+        if (childType == "NULL"){
+            return "NULL";
+        }
+        else {
+            return "sum";
+        }
+    }
+
 	~SumOp () {}
 };
 
@@ -446,6 +648,17 @@ public:
 
     bool isValid(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return child->isValid(myCatalog, aliasMap);
+    }
+
+    string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
+        string childType = child->getType(myCatalog, aliasMap);
+
+        if (childType == "NULL"){
+            return "NULL";
+        }
+        else {
+            return "avg";
+        }
     }
 
 	~AvgOp () {}
