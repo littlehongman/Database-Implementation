@@ -10,6 +10,7 @@
 #include "MyDB_Table.h"
 #include <string>
 #include <utility>
+#include <unordered_map>
 
 using namespace std;
 
@@ -254,6 +255,40 @@ public:
 		}
 	}
 
+    bool isValid (MyDB_CatalogPtr myCatalog){
+        // 1. Make sure that all of the referenced tables exist in the database.
+        // (1) Traverse all tables from "SQL FROM CLAUSE", and use myCatalog to check if exists
+        // (2) IMPORTANT: create a map to map the alias table name to actual table name
+        string key = "";
+        string temp = "";
+
+        unordered_map<string, string> aliasMap;
+
+        for (auto a : tablesToProcess) {
+            key = a.first + ".attList";
+
+            if (!myCatalog->getString(key, temp)){
+                cout << "The table " << a.first << " does not exist in the database" << endl;
+                return false;
+            }
+
+            // Insert the map
+            aliasMap[a.second] = a.first;
+
+            cout << "\t" << a.first << " AS " << a.second << "\n";
+        }
+
+        // 2. Make sure that all of the referenced attributes exist, and are correctly attached to the tables that are indicated in the query.
+        // (1) Traverse all attributes from "SQL SELECT CLAUSE", and use myCatalog to check if exists
+        for (auto a : valuesToSelect) {
+
+        }
+
+
+
+        return true;
+    }
+
 	#include "FriendDecls.h"
 };
 
@@ -290,6 +325,10 @@ public:
 	bool isSFWQuery () {
 		return isQuery;
 	}
+
+    bool isSQLValid (MyDB_CatalogPtr myCatalog) {
+        return myQuery.isValid(myCatalog);
+    }
 
 	string addToCatalog (string storageDir, MyDB_CatalogPtr addToMe) {
 		return myTableToCreate.addToCatalog (storageDir, addToMe);

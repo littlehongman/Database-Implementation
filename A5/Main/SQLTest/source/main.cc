@@ -60,6 +60,9 @@ int main (int numArgs, char **args) {
 		cout << "MyDB> ";
 
 		// this will be used to collect the query
+        // The benefit of using stringstream is that it provides a convenient and efficient way to parse input strings,
+        // especially when the format of the input is well-defined and regular.
+        // The extraction operators provided by stringstream are designed to handle different types of data, including integers, floats, and strings.
 		stringstream ss;
 
 		// get a line
@@ -68,11 +71,11 @@ int main (int numArgs, char **args) {
 			// see if it has a ";" at the end
 			size_t pos = line.find (';');
 
-			// it does!!  so we are ready yo parse
+			// it does!!  so we are ready to parse
 			if (pos != string :: npos) {
 
 				// append the last line
-				line.resize (pos);
+				line.resize (pos); // Cut the input string on ';' symbol
 				ss << line;
 
 				// see if someone wants to load a file
@@ -160,9 +163,18 @@ int main (int numArgs, char **args) {
 						}	
 
 					} else if (final->isSFWQuery ()) {
+                        // TODO: Call method to perform semantic checking, if the
+                        if (final->isSQLValid(myCatalog)){ // Will Print the error messages from the struct function
+                            // print it out
+                            final->printSFWQuery ();
+                        }
 
-						// print it out
-						final->printSFWQuery ();
+                        else {
+                            // get outta here
+                            if (final != nullptr)
+                                delete final;
+                            break;
+                        }
 					}
 
 					// get outta here
