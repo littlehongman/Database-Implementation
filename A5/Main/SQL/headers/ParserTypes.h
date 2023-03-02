@@ -289,6 +289,12 @@ public:
                 return false;
         }
 
+        // (3) Traverse all attributes from "SQL GROUP BY CLAUSE", and use myCatalog to check if exists
+        for (auto a : groupingClauses) {
+            if (!a->isValid(myCatalog, aliasMap))
+                return false;
+        }
+
         // 3. Make sure that there are no type mismatches in any expressions.
         // (1) Traverse all attributes from "SQL SELECT CLAUSE", and use myCatalog to check if exists
         for (auto a : valuesToSelect) {
@@ -298,6 +304,12 @@ public:
 
         // (2) Traverse all attributes from "SQL WHERE CLAUSE", and use myCatalog to check if exists
         for (auto a : allDisjunctions) {
+            if (a->getType(myCatalog, aliasMap) == "NULL")
+                return false;
+        }
+
+        // (3) Traverse all attributes from "SQL GROUP BY CLAUSE", and use myCatalog to check if exists
+        for (auto a : groupingClauses) {
             if (a->getType(myCatalog, aliasMap) == "NULL")
                 return false;
         }

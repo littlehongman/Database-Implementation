@@ -162,7 +162,7 @@ public:
 
         // Check if the attributes exist in the corresponding table
         if (!myCatalog->getString(key, temp)){
-            cout << "Error: The attribute " << attName << " does not exist in the table" << aliasMap[tableName] << endl;
+            cout << "Error: The attribute " << attName << " does not exist in the table " << aliasMap[tableName] << endl;
             cout << "       OR" << endl;
             cout << "       The attribute " << attName << " is attached to the wrong table" << endl;
 
