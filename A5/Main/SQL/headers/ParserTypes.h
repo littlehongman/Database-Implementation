@@ -10,7 +10,9 @@
 #include "MyDB_Table.h"
 #include <string>
 #include <utility>
+
 #include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
 
@@ -314,6 +316,38 @@ public:
                 return false;
         }
 
+        // 4. Make sure that there are no type mismatches in any expressions.
+        unordered_set<string> groupAttSet; // collect all appear attributes in GROUP BY clause
+
+        // (1) Make sure no aggregate function in WHERE clause
+        for (auto a : allDisjunctions) {
+            if (a->hasAggFunc()){
+                cout << "Error: Aggregate function is not allowed in WHERE clause" << endl;
+                return false;
+            }
+
+        }
+
+        // (2) Make sure no aggregate function in GROUP BY clause
+        for (auto a : groupingClauses) {
+            if (a->hasAggFunc()){
+                cout << "Error: Aggregate function is not allowed in GROUP BY clause" << endl;
+                return false;
+            }
+
+            // Add the attribute to the set
+            groupAttSet.insert(a->toString());
+        }
+
+        // (3) Make sure the selected attributes (not aggregate functions) must be in the GROUP BY clause.
+        for (auto a : valuesToSelect) {
+            if (!a->hasAggFunc()){
+                if (groupAttSet.find(a->toString()) == groupAttSet.end()){
+                    cout << "Error: The selected attributes is not in the GROUP BY clause" << endl;
+                    return false;
+                }
+            }
+        }
 
 
         return true;

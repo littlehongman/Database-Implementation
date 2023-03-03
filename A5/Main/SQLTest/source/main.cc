@@ -163,7 +163,7 @@ int main (int numArgs, char **args) {
 						}	
 
 					} else if (final->isSFWQuery ()) {
-                        // TODO: Call method to perform semantic checking, if the
+                        // TODO: Call method to perform semantic checking
                         if (final->isSQLValid(myCatalog)){ // Will Print the error messages from the struct function
                             // print it out
                             final->printSFWQuery ();

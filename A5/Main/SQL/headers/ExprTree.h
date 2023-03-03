@@ -27,6 +27,10 @@ public:
     // This will return the type of the expression
     virtual string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap) = 0;
 
+    virtual bool hasAggFunc() {
+        return false;
+    }
+
 	virtual ~ExprTree () {}
 };
 
@@ -55,6 +59,7 @@ public:
     string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return "bool";
     }
+
 };
 
 class DoubleLiteral : public ExprTree {
@@ -105,6 +110,7 @@ public:
         return "int";
     }
 
+
 	~IntLiteral () {}
 };
 
@@ -130,6 +136,7 @@ public:
     string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         return "string";
     }
+
 
 	~StringLiteral () {}
 };
@@ -181,6 +188,7 @@ public:
         return temp;
     }
 
+
 	~Identifier () {}
 };
 
@@ -224,6 +232,7 @@ public:
             return "NULL";
         }
     }
+
 
 	~MinusOp () {}
 };
@@ -627,6 +636,10 @@ public:
         }
     }
 
+    bool hasAggFunc() override {
+        return true;
+    }
+
 	~SumOp () {}
 };
 
@@ -659,6 +672,10 @@ public:
         else {
             return "avg";
         }
+    }
+
+    bool hasAggFunc() override {
+        return true;
     }
 
 	~AvgOp () {}
