@@ -340,11 +340,13 @@ public:
         }
 
         // (3) Make sure the selected attributes (not aggregate functions) must be in the GROUP BY clause.
-        for (auto a : valuesToSelect) {
-            if (!a->hasAggFunc()){
-                if (groupAttSet.find(a->toString()) == groupAttSet.end()){
-                    cout << "Error: The selected attributes is not in the GROUP BY clause" << endl;
-                    return false;
+        if (groupAttSet.size() != 0){
+            for (auto a : valuesToSelect) {
+                if (!a->hasAggFunc()){
+                    if (groupAttSet.find(a->toString()) == groupAttSet.end()){
+                        cout << "Error: The selected attributes is not in the GROUP BY clause" << endl;
+                        return false;
+                    }
                 }
             }
         }

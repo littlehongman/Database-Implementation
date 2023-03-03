@@ -519,11 +519,15 @@ public:
         string lhsType = lhs->getType(myCatalog, aliasMap);
         string rhsType = rhs->getType(myCatalog, aliasMap);
 
-        if (lhsType == "NULL" || rhsType == "NULL"){
+        if ((rhsType == "eq" || rhsType == "neq" || rhsType == "lt" || rhsType == "gt") && (lhsType == "eq" || lhsType == "neq" || lhsType == "lt" || lhsType == "gt")){
+            return "not";
+        }
+        else if (lhsType == "NULL" || rhsType == "NULL"){
             return "NULL";
         }
         else {
-            return "or";
+            cout << "Error: Attempted to perform 'or' on value of type " << lhsType << " and type " << rhsType << endl;
+            return "NULL";
         }
     }
 
@@ -594,11 +598,15 @@ public:
     string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         string childType = child->getType(myCatalog, aliasMap);
 
-        if (childType == "NULL"){
+        if (childType == "eq" || childType == "neq" || childType == "lt" || childType == "gt"){
+            return "not";
+        }
+        else if (childType == "NULL"){
             return "NULL";
         }
         else {
-            return "or";
+            cout << "Error: Attempted to perform 'not' on value of type " << childType << endl;
+            return "NULL";
         }
     }
 
@@ -628,11 +636,15 @@ public:
     string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         string childType = child->getType(myCatalog, aliasMap);
 
-        if (childType == "NULL"){
+        if (childType == "int" || childType == "double"){
+            return childType;
+        }
+        else if (childType == "NULL"){
             return "NULL";
         }
         else {
-            return "sum";
+            cout << "Error: Attempted to perform 'sum' on value of type " << childType << endl;
+            return "NULL";
         }
     }
 
@@ -666,11 +678,15 @@ public:
     string getType(MyDB_CatalogPtr myCatalog, unordered_map<string, string> &aliasMap){
         string childType = child->getType(myCatalog, aliasMap);
 
-        if (childType == "NULL"){
+        if (childType == "int" || childType == "double"){
+            return childType;
+        }
+        else if (childType == "NULL"){
             return "NULL";
         }
         else {
-            return "avg";
+            cout << "Error: Attempted to perform 'sum' on value of type " << childType << endl;
+            return "NULL";
         }
     }
 
