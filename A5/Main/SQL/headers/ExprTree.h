@@ -275,6 +275,9 @@ public:
         else if (lhsType == "string" && rhsType == "string"){ // String can be concatenated with string
             return "string";
         }
+        else if ((lhsType == "string" && (rhsType == "int" || rhsType == "double")) || ((lhsType == "int" || lhsType == "double") && rhsType == "string")){ // String can be concatenated with int or double
+            return "string";
+        }
         else {
             cout << "Error: Attempted to add values of type " << lhsType << " and type " << rhsType << endl;
             return "NULL";

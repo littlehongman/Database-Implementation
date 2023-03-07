@@ -274,6 +274,11 @@ public:
                 return false;
             }
 
+            if (aliasMap.find(a.second) != aliasMap.end()){
+                cout << "Error: The alias " << a.second << " is used more than once" << endl;
+                return false;
+            }
+
             // Insert the map
             aliasMap[a.second] = a.first;
         }
