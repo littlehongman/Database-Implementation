@@ -407,6 +407,9 @@ public:
             (lhsType == "string" && rhsType == "string")) {
             return "gt";
         }
+        else if (lhsType == "NULL" || rhsType == "NULL"){
+            return "NULL";
+        }
         else {
             cout << "Error: Attempted to perform 'greater than' comparison on values of type " << lhsType << " and type " << rhsType << endl;
             return "NULL";
@@ -447,6 +450,9 @@ public:
             (lhsType == "string" && rhsType == "string")) {
             return "lt";
         }
+        else if (lhsType == "NULL" || rhsType == "NULL"){
+            return "NULL";
+        }
         else {
             cout << "Error: Attempted to perform 'less than' comparison on values of type " << lhsType << " and type " << rhsType << endl;
             return "NULL";
@@ -486,6 +492,9 @@ public:
             (lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double") ||
             (lhsType == "string" && rhsType == "string")) {
             return "neq";
+        }
+        else if (lhsType == "NULL" || rhsType == "NULL"){
+            return "NULL";
         }
         else {
             cout << "Error: Attempted to perform 'not equal' comparison on values of type " << lhsType << " and type " << rhsType << endl;
@@ -567,6 +576,9 @@ public:
             (lhsType == "double" && rhsType == "int") || (lhsType == "int" && rhsType == "double") ||
             (lhsType == "string" && rhsType == "string")) {
             return "eq";
+        }
+        else if (lhsType == "NULL" || rhsType == "NULL"){
+            return "NULL";
         }
         else {
             cout << "Error: Attempted to perform 'equal' comparison on values of type " << lhsType << " and type " << rhsType << endl;
