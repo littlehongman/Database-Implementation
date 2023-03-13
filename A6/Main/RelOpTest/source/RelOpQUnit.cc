@@ -91,10 +91,10 @@ int main () {
                 MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
                 MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
 
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-		}
+        while (myIter->advance ()) {
+                myIter->getCurrent (temp);
+                cout << temp << "\n";
+        }
 
 		// now, we count the total number of records 
 		vector <pair <MyDB_AggType, string>> aggsToCompute;
