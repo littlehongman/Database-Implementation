@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-// This class encapulates a scan join, where one table is hashed, and then the 
+// This class encapsulates a scan join, where one table is hashed, and then the
 // other is scanned and joined with the hashed table.  If the smaller table is
 // too large to be stored in the buffer manager in its entirity, then the join
 // will fail.
@@ -62,7 +62,7 @@ public:
         //       (supplierLeft.l_suppkey = supplierRight.r_suppkey) AND
         //       (supplierLeft.l_name = supplierRight.r_name)
         //
-	// The code is roughlt as follows:
+	// The code is roughly as follows:
 	//
         //      vector <pair <string, string>> hashAtts;
         //      hashAtts.push_back (make_pair (string ("[l_suppkey]"), string ("[r_suppkey]")));

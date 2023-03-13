@@ -52,11 +52,11 @@ ScanJoin :: ScanJoin (MyDB_TableReaderWriterPtr leftInputIn, MyDB_TableReaderWri
 void ScanJoin :: run () {
 
 	// this is the hash map we'll use to look up data... the key is the hashed value
-	// of all of the records' join keys, and the value is a list of pointers were all
-	// of the records with that hsah value are located
+	// of all of the records' join keys, and the value is a list of pointers where all
+	// of the records with that hash value are located
 	unordered_map <size_t, vector <void *>> myHash;
 
-	// get all of the pages
+	// get all of the pages on left table
 	vector <MyDB_PageReaderWriter> allData;
 	for (int i = 0; i < leftTable->getNumPages (); i++) {
 		MyDB_PageReaderWriter temp = leftTable->getPinned (i);
@@ -74,7 +74,7 @@ void ScanJoin :: run () {
 	}
 
 	// now get the predicate
-	func leftPred = leftInputRec->compileComputation (leftSelectionPredicate);
+    func leftPred = leftInputRec->compileComputation (leftSelectionPredicate);
 
 	// add all of the records to the hash table
 	MyDB_RecordIteratorAltPtr myIter = getIteratorAlt (allData);
@@ -84,7 +84,7 @@ void ScanJoin :: run () {
 		// hash the current record
 		myIter->getCurrent (leftInputRec);
 
-		// see if it is accepted by the preicate
+		// see if it is accepted by the predicate
 		if (!leftPred ()->toBool ()) {
 			continue;
 		}
