@@ -26,7 +26,7 @@ void RegularSelection :: run () {
     // Create an iterator over input table
     MyDB_RecordIteratorAltPtr inputIter = input->getIteratorAlt ();
 
-    // and get the final set of computatoins that will be used to buld the output record
+    // Get the set of computations that will be used to build the output record
     vector <func> finalComputations;
     for (string s : projections) {
         finalComputations.push_back (inputRec->compileComputation (s));
