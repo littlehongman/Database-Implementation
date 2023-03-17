@@ -142,25 +142,28 @@ void SortMergeJoin :: run () {
     function <bool ()> compLeftHelper1 = buildRecordComparator (leftRec, leftRec1, equalityCheck.first);
     function <bool ()> compLeftHelper2 = buildRecordComparator (leftRec1, leftRec, equalityCheck.first);
 
+    // Create variables to keep track of the current records
     vector<void*> potentialMatches = {};
-    int counter = 0, sub_count = 0;
+    bool reachEnd = false;
+//    int counter = 0, sub_count = 0;
 
-    while (true){
+    while (!reachEnd){
 
         // Get the current left and right records
         matchedLeftIter->getCurrent(leftRec);
-
         matchedRightIter->getCurrent(rightRec);
 
         // Compare the left and right records
         if (smaller()->toBool()){
             // If the left record is smaller than the right record, advance the left record
             if (!matchedLeftIter->advance()){
+                reachEnd = true;
                 break;
             }
         } else if (larger()->toBool()){
             // If the left record is larger than the right record, advance the right record
             if (!matchedRightIter->advance()){
+                reachEnd = true;
                 break;
             }
         } else if (equal()->toBool()){
@@ -181,6 +184,7 @@ void SortMergeJoin :: run () {
                 }
 
                 if (!matchedLeftIter->advance()){
+                    reachEnd = true;
                     break;
                 }
 
@@ -192,14 +196,12 @@ void SortMergeJoin :: run () {
                 matchedRightIter->getCurrent(rightRec);
 
                 if (equal()->toBool()){
-                    sub_count ++;
                     for (auto &v: potentialMatches){
 
                         leftRec->fromBinary(v);
 
                         // Check if satisfy the final predicate
                         if(finalPredicate()-> toBool()){
-                            counter ++;
                             int i = 0;
 
                             for (auto &f : finalComputations) {
@@ -214,6 +216,7 @@ void SortMergeJoin :: run () {
                     }
 
                     if (!matchedRightIter->advance()){
+                        reachEnd = true;
                         break;
                     }
 
@@ -224,12 +227,9 @@ void SortMergeJoin :: run () {
             }
         }
 
-        if (!matchedLeftIter->advance()){
-            break;
-        }
-
         potentialMatches.clear();
     }
+
 
 }
 
