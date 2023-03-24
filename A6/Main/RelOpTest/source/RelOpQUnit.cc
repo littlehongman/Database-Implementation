@@ -192,6 +192,7 @@ int main () {
                 while (myIter->advance ()) {
                         myIter->getCurrent (temp);
 			cout << temp << "\n";
+
 		}
 	}
 	
