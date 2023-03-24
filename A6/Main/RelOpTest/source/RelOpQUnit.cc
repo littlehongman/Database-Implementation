@@ -23,6 +23,9 @@
 #include <iostream>
 #include <vector>
 #include <utility>
+#include <sstream>
+
+#define FALLTHROUGH_INTENDED do {} while (0)
 
 using namespace std;
 
@@ -91,8 +94,16 @@ int main () {
                 MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
                 MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
 
+        stringstream ss;
+        bool first = true;
         while (myIter->advance ()) {
                 myIter->getCurrent (temp);
+                if (first) {
+                        first = false;
+                        ss << temp;
+                        string s = ss.str ();
+                        QUNIT_IS_EQUAL (s, "Supplier#000000003|1|11-383-516-1199 4192.400000 furiously regular instructions impress slyly! carefu|");
+                    }
                 cout << temp << "\n";
         }
 
@@ -118,8 +129,11 @@ int main () {
                 while (myIter->advance ()) {
                         myIter->getCurrent (temp);
 			cout << temp << "\n";
+
+
 		}
 	}
+    FALLTHROUGH_INTENDED;
 
 	{
 		// get the output schema and table
@@ -138,6 +152,8 @@ int main () {
 		RegularSelection myOp (supplierTableL, supplierTableOut, "&& (== ([l_nationkey], int[1]), > ([l_name], string [Supplier#000009378]))", projections);
 		myOp.run ();
 
+        stringstream ss;
+        bool first = true;
 		cout << "\nFirst result should be:\n";
 		cout << "Supplier#000009428|1|11-896-966-5146 5429.370000 furiously regular pinto beans caj|\n\n";
                 MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
@@ -145,6 +161,12 @@ int main () {
 
                 while (myIter->advance ()) {
                         myIter->getCurrent (temp);
+                        if (first) {
+                                first = false;
+                                ss << temp;
+                                string s = ss.str ();
+                                QUNIT_IS_EQUAL (s, "Supplier#000009428|1|11-896-966-5146 5429.370000 furiously regular pinto beans caj|");
+                            }
 			cout << temp << "\n";
 		}
 
