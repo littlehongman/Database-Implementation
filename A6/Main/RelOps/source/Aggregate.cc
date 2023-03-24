@@ -148,6 +148,7 @@ void Aggregate :: run () {
     // Create a PINNED page
     MyDB_PageReaderWriter currPage(true, *outputTable->getBufferMgr());
     pages.push_back(currPage);
+    MyDB_AttValPtr zero = make_shared <MyDB_IntAttVal> ();
 
     // Iterate over the input table
     while (inputIter->hasNext()){
@@ -175,7 +176,14 @@ void Aggregate :: run () {
             }
 
             for (auto &f: aggComputations){
-                aggRec->getAtt(idx++)->set(f());
+                aggRec->getAtt(idx++)->set(zero);
+            }
+
+            idx = 0;
+
+            for (auto &f: aggComputations){
+                aggRec->getAtt(numGroupings + idx)->set(f());
+                idx++;
             }
 
             aggRec->recordContentHasChanged();
@@ -241,7 +249,14 @@ void Aggregate :: run () {
                 }
 
                 for (auto &f: aggComputations){
-                    aggRec->getAtt(idx++)->set(f());
+                    aggRec->getAtt(idx++)->set(zero);
+                }
+
+                idx = 0;
+
+                for (auto &f: aggComputations){
+                    aggRec->getAtt(idx + numGroupings)->set(f());
+                    idx ++;
                 }
 
                 aggRec->recordContentHasChanged();
@@ -270,12 +285,11 @@ void Aggregate :: run () {
     // 4. Write the records to the output table
     // We can achieve this by loop through all the records in the pages
     MyDB_RecordIteratorAltPtr outputIter = getIteratorAlt(pages);
-
     while(outputIter->advance()){
 
         // Load the record from the page
         outputIter->getCurrent(aggRec);
-
+//
         for (i = 0; i < numGroupings; i++){
             outputRec->getAtt(i)->set(aggRec->getAtt(i));
         }
@@ -284,11 +298,11 @@ void Aggregate :: run () {
             outputRec->getAtt(i++)->set(f());
         }
 
+
         outputRec->recordContentHasChanged();
         outputTable->append(outputRec);
 
     }
-
 }
 
 #endif
