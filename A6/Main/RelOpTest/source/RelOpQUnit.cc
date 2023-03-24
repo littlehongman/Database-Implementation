@@ -698,7 +698,7 @@ int main() {
             cout << temp << "\n";
             ss << temp;
             string s = ss.str();
-            QUNIT_IS_EQUAL(s, "11103008");
+            QUNIT_IS_EQUAL(s, "11103008|");
         }
     }
 
