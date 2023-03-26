@@ -479,12 +479,13 @@ int main() {
             cout << temp << "\n";
             ss << temp;
             string s = ss.str();
+            string sub = s.substr(s.size() - 5);
+
             if (s == "0|50.000000|4017.558586|3168|")
                 hasZero = true;
-            if (s == "100|10000.000000|8968.420000|32|")
+            else if (s == "100|10000.000000|8968.420000|32|")
                 hasHundred = true;
-            string sub = s.substr(s.size() - 5);
-            if (count != 0 && count != 100) {
+            else {
                 QUNIT_IS_EQUAL(sub, "3200|");
             }
             ss = stringstream();
@@ -600,6 +601,7 @@ int main() {
         MyDB_TablePtr aggTable = make_shared<MyDB_Table>("aggOut", "aggOut.bin", mySchemaOutAgain);
         MyDB_TableReaderWriterPtr aggTableOut = make_shared<MyDB_TableReaderWriter>(aggTable, myMgr);
 
+
         Aggregate myOpAgain(supplierTableOut, aggTableOut, aggsToCompute, groupings, "bool[true]");
         cout << "running aggregate\n";
         myOpAgain.run();
@@ -607,17 +609,20 @@ int main() {
         MyDB_RecordPtr temp = aggTableOut->getEmptyRecord();
         MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt();
 
+
+
         cout
                 << "\nThe output should be\n\t0|64|\n\t1|96|\n\t2|64|\n\t3|96|\n\t4|192|\n\t5|256|\n\t6|192|\n\t7|96|\n\t8|64|\n\t9|128|\n\t11|288|\n\t14|96|\n\t15|128|\n\t16|128|\n\t17|32|\n\t19|64|\n\t20|384|\n\t24|64|\n\n";
-        stringstream ss;
+        stringstream ss, ans;
         while (myIter->advance()) {
             myIter->getCurrent(temp);
             cout << temp << "\n";
             ss << temp << "\n";
         }
         string s = ss.str();
-        QUNIT_IS_EQUAL(s,
-                       "0|64\n1|96\n2|64\n3|96\n4|192\n5|256\n6|192\n7|96\n8|64\n9|128\n11|288\n14|96\n15|128\n16|128\n17|32\n19|64\n20|384\n24|64\n");
+
+        ans << "0|64|\n1|96|\n2|64|\n3|96|\n4|192|\n5|256|\n6|192|\n7|96|\n8|64|\n9|128|\n11|288|\n14|96|\n15|128|\n16|128|\n17|32|\n19|64|\n20|384|\n24|64|\n";
+        QUNIT_IS_EQUAL(s, ans.str());
     }
 
     FALLTHROUGH_INTENDED;

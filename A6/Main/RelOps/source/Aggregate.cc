@@ -148,7 +148,7 @@ void Aggregate :: run () {
     // Create a PINNED page
     MyDB_PageReaderWriter currPage(true, *outputTable->getBufferMgr());
     pages.push_back(currPage);
-    MyDB_AttValPtr zero = make_shared <MyDB_IntAttVal> ();
+    MyDB_AttValPtr defaultValue = make_shared <MyDB_IntAttVal> ();
 
     // Iterate over the input table
     while (inputIter->hasNext()){
@@ -158,6 +158,8 @@ void Aggregate :: run () {
         if(!pred()->toBool()){
             continue;
         }
+
+//        cout << inputRec << endl;
 
         // Calculate the hash value
         size_t hashVal = 0;
@@ -175,8 +177,9 @@ void Aggregate :: run () {
                 aggRec->getAtt(idx++)->set(f());
             }
 
+            // First set all value to zero, so that we can accumulate the value
             for (auto &f: aggComputations){
-                aggRec->getAtt(idx++)->set(zero);
+                aggRec->getAtt(idx++)->set(defaultValue);
             }
 
             idx = 0;
@@ -196,7 +199,7 @@ void Aggregate :: run () {
                 MyDB_PageReaderWriter newPage(true, *outputTable->getBufferMgr());
 
                 // First push_back, then assign currPage to newPage
-                pages.push_back(currPage);
+                pages.push_back(newPage);
                 currPage = newPage;
 
                 addr = currPage.appendAndReturnLocation(aggRec);
@@ -248,8 +251,9 @@ void Aggregate :: run () {
                     aggRec->getAtt(idx++)->set(f());
                 }
 
+                // First set all value to zero, so that we can accumulate the value
                 for (auto &f: aggComputations){
-                    aggRec->getAtt(idx++)->set(zero);
+                    aggRec->getAtt(idx++)->set(defaultValue);
                 }
 
                 idx = 0;

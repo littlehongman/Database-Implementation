@@ -52,8 +52,6 @@ public:
         string leftSelectionPredicate;
         string rightSelectionPredicate;
 
-        size_t runSize;
-
 };
 
 #endif

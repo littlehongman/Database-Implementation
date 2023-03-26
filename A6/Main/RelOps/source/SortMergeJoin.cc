@@ -27,8 +27,6 @@ SortMergeJoin :: SortMergeJoin (MyDB_TableReaderWriterPtr leftInput, MyDB_TableR
 
     this->projections = projections;
     this->equalityCheck = equalityCheck;
-
-    this->runSize = leftInput->getBufferMgr()->numPages / 2;
 }
 
 void SortMergeJoin :: run () {
@@ -90,7 +88,7 @@ void SortMergeJoin :: run () {
 
     function <bool ()> compLeft = buildRecordComparator (leftRec1, leftRec2, equalityCheck.first);
 
-    MyDB_RecordIteratorAltPtr matchedLeftIter = buildItertorOverSortedRuns(runSize, *leftInput, compLeft, leftRec1, leftRec2, leftSelectionPredicate);
+    MyDB_RecordIteratorAltPtr matchedLeftIter = buildItertorOverSortedRuns(64, *leftInput, compLeft, leftRec1, leftRec2, leftSelectionPredicate);
 
     // Get sorted right input table that satisfies right selection predicate
     MyDB_RecordPtr rightRec1 = rightInput->getEmptyRecord ();
@@ -98,7 +96,7 @@ void SortMergeJoin :: run () {
 
     function <bool ()> compRight = buildRecordComparator (rightRec1, rightRec2, equalityCheck.second);
 
-    MyDB_RecordIteratorAltPtr matchedRightIter = buildItertorOverSortedRuns(runSize, *rightInput, compRight, rightRec1, rightRec2, rightSelectionPredicate);
+    MyDB_RecordIteratorAltPtr matchedRightIter = buildItertorOverSortedRuns(64, *rightInput, compRight, rightRec1, rightRec2, rightSelectionPredicate);
 
     // 3. Join the two tables
 
@@ -142,8 +140,17 @@ void SortMergeJoin :: run () {
     function <bool ()> compLeftHelper1 = buildRecordComparator (leftRec, leftRec1, equalityCheck.first);
     function <bool ()> compLeftHelper2 = buildRecordComparator (leftRec1, leftRec, equalityCheck.first);
 
+
     // Create variables to keep track of the current records
-    vector<void*> potentialMatches = {};
+    // ATTENTION: This method will not work because the whole vector is stored in RAM,
+    // HOWEVER, the number of potentialMatches may exceed the RAM size
+    // vector<void*> potentialMatches = {};
+
+    // Alternative way to store the potential match records
+    vector<MyDB_PageReaderWriter> potentalMatchesPages = {};
+    MyDB_PageReaderWriter currPage(true, *output->getBufferMgr());
+    potentalMatchesPages.push_back(currPage);
+
     bool reachEnd = false;
 //    int counter = 0, sub_count = 0;
 
@@ -177,7 +184,17 @@ void SortMergeJoin :: run () {
 
                 // If two records equals
                 if(!compLeftHelper1() && !compLeftHelper2()){
-                    potentialMatches.push_back(matchedLeftIter->getCurrentPointer());
+
+                    if (!currPage.append(leftRec1)){
+                        MyDB_PageReaderWriter newPage(true, *output->getBufferMgr());
+                        potentalMatchesPages.push_back(newPage);
+
+                        currPage = newPage;
+
+                        currPage.append(leftRec1);
+                    }
+
+//                    potentialMatches.push_back(matchedLeftIter->getCurrentPointer());
                 }
                 else {
                     break;
@@ -196,9 +213,12 @@ void SortMergeJoin :: run () {
                 matchedRightIter->getCurrent(rightRec);
 
                 if (equal()->toBool()){
-                    for (auto &v: potentialMatches){
+                    MyDB_RecordIteratorAltPtr potentialMatchIter = getIteratorAlt(potentalMatchesPages);
 
-                        leftRec->fromBinary(v);
+                    while (potentialMatchIter->advance()){
+
+                        potentialMatchIter->getCurrent(leftRec);
+//                        leftRec->fromBinary(v);
 
                         // Check if satisfy the final predicate
                         if(finalPredicate()-> toBool()){
@@ -209,7 +229,7 @@ void SortMergeJoin :: run () {
                             }
 
                             outputRec->recordContentHasChanged ();
-                            cout << outputRec << endl;
+//                            cout << outputRec << endl;
                             output->append (outputRec);
 
                         }
@@ -225,10 +245,17 @@ void SortMergeJoin :: run () {
                     break;
                 }
             }
+
+            // After matching
+            potentalMatchesPages.clear();
+            currPage.clear();
+
+            potentalMatchesPages.push_back(currPage);
         }
 
-        potentialMatches.clear();
+
     }
+
 
 
 }
