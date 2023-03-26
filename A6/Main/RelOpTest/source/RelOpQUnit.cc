@@ -374,7 +374,8 @@ int main() {
                 "Supplier#000009436|aaY,0sdTlrtKjse|I love comments! unusual, regular accounts about the pending deposits are slyly special instructions-- ironic theodo|") {
                 count++;
             }
-            ss = stringstream();
+//            ss = stringstream();
+            ss.str("");
         }
         QUNIT_IS_EQUAL(count, 32);
     }
@@ -430,7 +431,8 @@ int main() {
 
             string sub = s.substr(s.size() - 3);
             QUNIT_IS_EQUAL(sub, "32|");
-            ss = stringstream();
+//            ss = stringstream();
+            ss.str("");
             count++;
         }
         QUNIT_IS_EQUAL(count, 9);
@@ -488,7 +490,8 @@ int main() {
             else {
                 QUNIT_IS_EQUAL(sub, "3200|");
             }
-            ss = stringstream();
+//            ss = stringstream();
+            ss.str("");
             count++;
         }
         QUNIT_IS_EQUAL(count, 101);
@@ -526,7 +529,8 @@ int main() {
             ss << temp;
             string s = ss.str();
             QUNIT_IS_EQUAL(s, "320000|");
-            ss = stringstream();
+//            ss = stringstream();
+            ss.str("");
         }
     }
 
