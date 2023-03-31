@@ -88,7 +88,7 @@ void SortMergeJoin :: run () {
 
     function <bool ()> compLeft = buildRecordComparator (leftRec1, leftRec2, equalityCheck.first);
 
-    MyDB_RecordIteratorAltPtr matchedLeftIter = buildItertorOverSortedRuns(64, *leftInput, compLeft, leftRec1, leftRec2, leftSelectionPredicate);
+    MyDB_RecordIteratorAltPtr matchedLeftIter = buildItertorOverSortedRuns(leftInput->getBufferMgr()->numPages / 2, *leftInput, compLeft, leftRec1, leftRec2, leftSelectionPredicate);
 
     // Get sorted right input table that satisfies right selection predicate
     MyDB_RecordPtr rightRec1 = rightInput->getEmptyRecord ();
@@ -96,7 +96,7 @@ void SortMergeJoin :: run () {
 
     function <bool ()> compRight = buildRecordComparator (rightRec1, rightRec2, equalityCheck.second);
 
-    MyDB_RecordIteratorAltPtr matchedRightIter = buildItertorOverSortedRuns(64, *rightInput, compRight, rightRec1, rightRec2, rightSelectionPredicate);
+    MyDB_RecordIteratorAltPtr matchedRightIter = buildItertorOverSortedRuns(leftInput->getBufferMgr()->numPages / 2, *rightInput, compRight, rightRec1, rightRec2, rightSelectionPredicate);
 
     // 3. Join the two tables
 
@@ -136,7 +136,8 @@ void SortMergeJoin :: run () {
         return;
     }
 
-    // Create a helper comparator to get records that same values continuously
+    // Create a helper comparator to get records that same values
+    // If (!compareLeftHelper1 && !compareLeftHelper2) => Two records equal
     function <bool ()> compLeftHelper1 = buildRecordComparator (leftRec, leftRec1, equalityCheck.first);
     function <bool ()> compLeftHelper2 = buildRecordComparator (leftRec1, leftRec, equalityCheck.first);
 
@@ -152,7 +153,6 @@ void SortMergeJoin :: run () {
     potentalMatchesPages.push_back(currPage);
 
     bool reachEnd = false;
-//    int counter = 0, sub_count = 0;
 
     while (!reachEnd){
 

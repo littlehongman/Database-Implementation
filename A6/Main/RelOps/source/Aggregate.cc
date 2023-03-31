@@ -25,7 +25,7 @@ Aggregate :: Aggregate (MyDB_TableReaderWriterPtr input, MyDB_TableReaderWriterP
 void Aggregate :: run () {
     // 0. Check if the number of attributes match the input arguments
     if (outputTable->getTable ()->getSchema ()->getAtts ().size () != aggsToCompute.size () + groupings.size ()) {
-        cout << "error, the output schema needs to have the same number of atts as (# of aggs to compute + # groups).\n";
+        cout << "ERROR: the output schema needs to have the same number of atts as (# of aggs to compute + # groups).\n";
         return;
     }
 
@@ -127,7 +127,7 @@ void Aggregate :: run () {
         }
         matchingPredicate += ")";
     }
-
+    // Create func for the later match checking
     func matchPred = combinedRec->compileComputation(matchingPredicate);
 
     // 3. Iterate records from input and create hashMap
@@ -293,7 +293,7 @@ void Aggregate :: run () {
 
         // Load the record from the page
         outputIter->getCurrent(aggRec);
-//
+
         for (i = 0; i < numGroupings; i++){
             outputRec->getAtt(i)->set(aggRec->getAtt(i));
         }
