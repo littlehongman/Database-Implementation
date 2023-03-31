@@ -148,7 +148,7 @@ void Aggregate :: run () {
     // Create a PINNED page
     MyDB_PageReaderWriter currPage(true, *outputTable->getBufferMgr());
     pages.push_back(currPage);
-    MyDB_AttValPtr defaultValue = make_shared <MyDB_IntAttVal> ();
+    MyDB_AttValPtr defaultValue = make_shared <MyDB_IntAttVal> (); // Default value is 0 to prevent calculation error
 
     // Iterate over the input table
     while (inputIter->hasNext()){
@@ -178,7 +178,7 @@ void Aggregate :: run () {
             }
 
             // First set all value to zero, so that we can accumulate the value
-            for (auto &f: aggComputations){
+            for (int x = 0; x < aggComputations.size(); x++){
                 aggRec->getAtt(idx++)->set(defaultValue);
             }
 
@@ -252,7 +252,7 @@ void Aggregate :: run () {
                 }
 
                 // First set all value to zero, so that we can accumulate the value
-                for (auto &f: aggComputations){
+                for (int x = 0; x < aggComputations.size(); x++){
                     aggRec->getAtt(idx++)->set(defaultValue);
                 }
 
