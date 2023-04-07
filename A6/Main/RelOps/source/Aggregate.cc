@@ -25,7 +25,7 @@ Aggregate :: Aggregate (MyDB_TableReaderWriterPtr input, MyDB_TableReaderWriterP
 void Aggregate :: run () {
     // 0. Check if the number of attributes match the input arguments
     if (outputTable->getTable ()->getSchema ()->getAtts ().size () != aggsToCompute.size () + groupings.size ()) {
-        cout << "error, the output schema needs to have the same number of atts as (# of aggs to compute + # groups).\n";
+        cout << "ERROR: the output schema needs to have the same number of atts as (# of aggs to compute + # groups).\n";
         return;
     }
 
@@ -127,7 +127,7 @@ void Aggregate :: run () {
         }
         matchingPredicate += ")";
     }
-
+    // Create func for the later match checking
     func matchPred = combinedRec->compileComputation(matchingPredicate);
 
     // 3. Iterate records from input and create hashMap
@@ -148,7 +148,7 @@ void Aggregate :: run () {
     // Create a PINNED page
     MyDB_PageReaderWriter currPage(true, *outputTable->getBufferMgr());
     pages.push_back(currPage);
-    MyDB_AttValPtr defaultValue = make_shared <MyDB_IntAttVal> ();
+    MyDB_AttValPtr defaultValue = make_shared <MyDB_IntAttVal> (); // Default value is 0 to prevent calculation error
 
     // Iterate over the input table
     while (inputIter->hasNext()){
@@ -178,7 +178,7 @@ void Aggregate :: run () {
             }
 
             // First set all value to zero, so that we can accumulate the value
-            for (auto &f: aggComputations){
+            for (int x = 0; x < aggComputations.size(); x++){
                 aggRec->getAtt(idx++)->set(defaultValue);
             }
 
@@ -252,7 +252,7 @@ void Aggregate :: run () {
                 }
 
                 // First set all value to zero, so that we can accumulate the value
-                for (auto &f: aggComputations){
+                for (int x = 0; x < aggComputations.size(); x++){
                     aggRec->getAtt(idx++)->set(defaultValue);
                 }
 
@@ -293,7 +293,7 @@ void Aggregate :: run () {
 
         // Load the record from the page
         outputIter->getCurrent(aggRec);
-//
+
         for (i = 0; i < numGroupings; i++){
             outputRec->getAtt(i)->set(aggRec->getAtt(i));
         }
