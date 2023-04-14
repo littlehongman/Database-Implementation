@@ -35,12 +35,16 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 	// find the various parts of the CNF
 	vector <ExprTreePtr> leftCNF; 
 	vector <ExprTreePtr> rightCNF; 
-	vector <ExprTreePtr> topCNF; 
+	vector <ExprTreePtr> topCNF;
+
+    //  leftCNF = all clauses in C referring only to attrs in left
+    //  rightCNF = all clauses in C referring only to attrs in right
+    //  topCNF = the rest of the clauses in C (those we cannot push down)
 
 	// loop through all of the disjunctions and break them apart
 	for (auto a: allDisjunctions) {
 		bool inLeft = a->referencesTable (tablesToProcess[0].second);
-			bool inRight = a->referencesTable (tablesToProcess[1].second);
+        bool inRight = a->referencesTable (tablesToProcess[1].second);
 		if (inLeft && inRight) {
 			cout << "top " << a->toString () << "\n";
 			topCNF.push_back (a);
@@ -162,13 +166,15 @@ SFWQuery :: SFWQuery (struct ValueList *selectClause, struct FromList *fromClaus
         struct CNF *cnf) {
         valuesToSelect = selectClause->valuesToCompute;
         tablesToProcess = fromClause->aliases;
-	allDisjunctions = cnf->disjunctions;
+	    allDisjunctions = cnf->disjunctions;
+        groupingClauses = {};
 }
 
 SFWQuery :: SFWQuery (struct ValueList *selectClause, struct FromList *fromClause) {
         valuesToSelect = selectClause->valuesToCompute;
         tablesToProcess = fromClause->aliases;
         allDisjunctions.push_back (make_shared <BoolLiteral> (true));
+        groupingClauses = {};
 }
 
 #endif
