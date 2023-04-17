@@ -146,21 +146,19 @@ int main (int numArgs, char **args) {
 					if (final->isCreateTable ()) {
 
 						string tableName = final->addToCatalog (args[2], myCatalog);
-						MyDB_TablePtr temp = make_shared <MyDB_Table> ();
-						temp->fromCatalog (tableName, myCatalog);
 						if (tableName != "nothing") {
-							allTables[tableName] = temp;
+							allTables = MyDB_Table :: getAllTables (myCatalog);
 							if (allTables [tableName]->getFileType () == "heap") {
-								allTableReaderWriters[tableName] = make_shared 
-       								   <MyDB_TableReaderWriter> (allTables [tableName], myMgr);
-  							} else if (allTables [tableName]->getFileType () == "bplustree") {
-    								allBPlusReaderWriters[tableName] = make_shared 
-       								   <MyDB_BPlusTreeReaderWriter> (allTables [tableName]->getSortAtt (), 
-       								   allTables [tableName], myMgr);
-    								allTableReaderWriters[tableName] = allBPlusReaderWriters[tableName];
-  							}
-  							out << "Added table " << final->addToCatalog (args[2], myCatalog) << "\n";
-						}
+								allTableReaderWriters[tableName] = 
+									make_shared <MyDB_TableReaderWriter> (allTables [tableName], myMgr);
+							} else if (allTables [tableName]->getFileType () == "bplustree") {
+								allBPlusReaderWriters[tableName] = 
+									make_shared <MyDB_BPlusTreeReaderWriter> 
+										(allTables [tableName]->getSortAtt (), allTables [tableName], myMgr);
+								allTableReaderWriters[tableName] = allBPlusReaderWriters[tableName];
+							}
+							cout << "Added table " << final->addToCatalog (args[2], myCatalog) << "\n";
+						}	
 
 					} else if (final->isSFWQuery ()) {
 

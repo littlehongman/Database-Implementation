@@ -81,10 +81,10 @@ add_executable(A7
         Main/SQL/headers/FriendDecls.h
         Main/SQL/headers/Lexer.h
         Main/SQL/headers/Parser.h
-        Main/SQL/source/Lexer.c
-        Main/SQL/source/Parser.c
-        Main/SQL/source/Parser.h
         Main/SQL/headers/ParserHelperFunctions.h
         Main/SQL/headers/ParserTypes.h
         Main/SQL/source/ParserHelperFunctions.cc
-        Main/SQLTest/source/main.cc)
+        Main/SQL/source/Lexer.c
+        Main/SQL/source/Parser.c
+        Main/SQL/source/Parser.h Main/SQLTest/source/main.cc)
+
