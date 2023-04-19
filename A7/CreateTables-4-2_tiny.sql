@@ -86,11 +86,11 @@ CREATE TABLE region (
 	r_comment	STRING
 );
 
-LOAD supplier FROM supplier.tbl;
-LOAD partsupp FROM partsupp.tbl;
-LOAD customer FROM customer.tbl;
-LOAD lineitem FROM lineitem.tbl;
-LOAD nation FROM nation.tbl;
-LOAD region FROM region.tbl;
-LOAD orders FROM orders.tbl;
-LOAD part FROM part.tbl;
+LOAD supplier FROM ../tiny_tbl/supplier.tbl;
+LOAD partsupp FROM ../tiny_tbl/partsupp.tbl;
+LOAD customer FROM ../tiny_tbl/customer.tbl;
+LOAD lineitem FROM ../tiny_tbl/lineitem.tbl;
+LOAD nation FROM ../tiny_tbl/nation.tbl;
+LOAD region FROM ../tiny_tbl/region.tbl;
+LOAD orders FROM ../tiny_tbl/orders.tbl;
+LOAD part FROM ../tiny_tbl/part.tbl;
