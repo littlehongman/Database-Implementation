@@ -11,6 +11,7 @@ CREATE TABLE part (
 	p_retailprice		DOUBLE,	
 	p_comment		STRING
 );
+LOAD part FROM part.tbl;
 
 CREATE TABLE supplier (
 	s_suppkey		INT,
@@ -29,6 +30,7 @@ CREATE TABLE partsupp (
 	ps_supplycost	DOUBLE,
 	ps_comment	STRING
 );
+LOAD partsupp FROM partsupp.tbl;
 
 CREATE TABLE customer (
 	c_custkey	INT,
@@ -84,3 +86,11 @@ CREATE TABLE region (
 	r_name		STRING,
 	r_comment	STRING
 );
+
+LOAD supplier FROM supplier.tbl;
+
+LOAD customer FROM customer.tbl;
+LOAD lineitem FROM lineitem.tbl;
+LOAD nation FROM nation.tbl;
+LOAD region FROM region.tbl;
+LOAD orders FROM orders.tbl;

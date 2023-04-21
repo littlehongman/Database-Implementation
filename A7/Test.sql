@@ -4,7 +4,8 @@ from
     part as p,
     partsupp as ps
 where
-    (p.p_partkey = ps.ps_partkey);
+    (p.p_partkey = ps.ps_partkey) and
+    p.p_partkey > 0;
 
 
 SELECT
