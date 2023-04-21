@@ -159,15 +159,30 @@ int main (int numArgs, char **args) {
        								   allTables [tableName], myMgr);
     								allTableReaderWriters[tableName] = allBPlusReaderWriters[tableName];
   							}
-  							out << "Added table " << final->addToCatalog (args[2], myCatalog) << "\n";
+  							cout << "Added table " << final->addToCatalog (args[2], myCatalog) << "\n";
 						}
 
 					} else if (final->isSFWQuery ()) {
 
 						LogicalOpPtr myPlan = final->buildLogicalQueryPlan (allTables, allTableReaderWriters);
+
 						if (myPlan != nullptr) {
 							auto res = myPlan->cost ();
 							cout << "cost was " << res.first << "\n";
+
+                            // execute the plan
+                            MyDB_TableReaderWriterPtr output = myPlan->execute();
+
+                            // print out the results
+                            MyDB_RecordPtr temp = output->getEmptyRecord();
+                            MyDB_RecordIteratorAltPtr myIter = output->getIteratorAlt();
+
+                            while (myIter->advance()) {
+                                myIter->getCurrent(temp);
+
+                                cout << temp << "\n";
+                            }
+
 						}
 					}
 
