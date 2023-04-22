@@ -34,6 +34,12 @@ public:
 	LogicalOpPtr buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, 
 		map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters);
 
+    LogicalOpPtr buildTwoTablePlan(map <string, MyDB_TablePtr> &allTables,
+                                   map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters);
+
+    LogicalOpPtr buildOneTablePlan(map <string, MyDB_TablePtr> &allTables,
+                                   map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters);
+
 	~SFWQuery () {}
 
 	void print ();
