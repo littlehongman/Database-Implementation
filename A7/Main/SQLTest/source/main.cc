@@ -177,7 +177,10 @@ int main (int numArgs, char **args) {
                             MyDB_RecordPtr temp = output->getEmptyRecord();
                             MyDB_RecordIteratorAltPtr myIter = output->getIteratorAlt();
 
-                            while (myIter->advance()) {
+                            // Counter => only output the first 30 results
+                            int count = 0;
+
+                            while (myIter->advance() && count++ < 30) {
                                 myIter->getCurrent(temp);
 
                                 cout << temp << "\n";
