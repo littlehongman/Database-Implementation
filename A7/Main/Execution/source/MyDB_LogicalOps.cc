@@ -134,13 +134,14 @@ MyDB_TableReaderWriterPtr LogicalTableScan :: execute () {
     // (2.5) transform CNF string to the format that can read by RelOps
     for (auto b: inputSpec->getTable()->getSchema()->getAtts()) {
         string toReplace = inputTableAlias + "_" + b.first;
-        size_t pos = predicate.find(toReplace);
 
-        if (pos == std::string::npos){
-            continue;
+        size_t start_pos = 0;
+
+        while((start_pos = predicate.find(toReplace, start_pos)) != std::string::npos) {
+            predicate.replace(start_pos, toReplace.length(), b.first);
+            start_pos += b.first.length(); // Handles case where 'to' is a substring of 'from'
         }
 
-        predicate.replace(pos, toReplace.length(), b.first);
     }
 
     // Run the RegularSelection
