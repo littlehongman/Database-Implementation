@@ -180,7 +180,7 @@ int main (int numArgs, char **args) {
                             // Counter => only output the first 30 results
                             int count = 0;
 
-                            while (myIter->advance() && count++ < 30) {
+                            while (myIter->advance()) {
                                 myIter->getCurrent(temp);
 
                                 cout << temp << "\n";
