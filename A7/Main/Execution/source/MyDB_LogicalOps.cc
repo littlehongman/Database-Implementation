@@ -6,6 +6,7 @@
 #include "RegularSelection.h"
 #include "SortMergeJoin.h"
 #include "ScanJoin.h"
+#include "Aggregate.h"
 
 // fill this out!  This should actually run the aggregation via an appropriate RelOp, and then it is going to
 // have to unscramble the output attributes and compute exprsToCompute using an execution of the RegularSelection 
@@ -15,9 +16,48 @@
 // Note that after the left and right hand sides have been executed, the temporary tables associated with the two 
 // sides should be deleted (via a kill to killFile () on the buffer manager)
 MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
-	return nullptr;
 
+    // First run the underlying operations
+    MyDB_TableReaderWriterPtr inputTablePtr = inputOp->execute();
+
+    // Define all the parameters needed for the JOIN
+    // (1) Create an outputTable ReaderWriter
+    MyDB_TableReaderWriterPtr outputTablePtr = make_shared<MyDB_TableReaderWriter>(outputSpec, inputTablePtr->getBufferMgr());
+
+    // (2) Create agg pairs to compute
+    vector<pair<MyDB_AggType, string>> aggsToCompute;
+
+    for (auto a: exprsToCompute) {
+        if (a->hasAgg()) {
+            string exprStr = a->toString();
+            string typeStr = exprStr.substr(0, 3);
+            string columnStr = exprStr.substr(4, exprStr.length() - 1);
+
+            if (typeStr == "avg"){
+                aggsToCompute.push_back(make_pair(MyDB_AggType::avg, columnStr));
+            }
+            else if (typeStr == "sum"){
+                aggsToCompute.push_back(make_pair(MyDB_AggType::sum, columnStr));
+            }
+            else if (typeStr == "cnt"){
+                aggsToCompute.push_back(make_pair(MyDB_AggType::cnt, columnStr));
+            }
+        }
+    }
+
+    // (3) Turn Grouping ExprTrees into strings
+    vector<string> groupingStrs;
+
+    for (auto a: groupings){
+        groupingStrs.push_back(a->toString());
+    }
+
+    Aggregate myOp(inputTablePtr, outputTablePtr, aggsToCompute ,groupingStrs, "bool[true]");
+    myOp.run();
+
+	return outputTablePtr;
 }
+
 // we don't really count the cost of the aggregate, so cost its subplan and return that
 pair <double, MyDB_StatsPtr> LogicalAggregate :: cost () {
 	return inputOp->cost ();
@@ -147,7 +187,6 @@ MyDB_TableReaderWriterPtr LogicalTableScan :: execute () {
     // Run the RegularSelection
     RegularSelection myOp(inputSpec, outputTablePtr, predicate, exprsToCompute);
     myOp.run();
-
 
 	return outputTablePtr;
 }
