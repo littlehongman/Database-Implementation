@@ -17,7 +17,7 @@ class LogicalOp {
 
 public:
 
-	// get the total cost to execute the logical plan, up to and including this logical operation.
+	// get the total cost to execute the logical plan, up to and including this loical operation.
 	// Note that the MyDB_StatsPtr will point to the set of statistics that come out of executing this plan
 	virtual pair <double, MyDB_StatsPtr> cost () = 0;
 
@@ -25,30 +25,7 @@ public:
 	// once this operation has been executed, delete the temporary tables associated with child operations
 	virtual MyDB_TableReaderWriterPtr execute () = 0;
 
-    // Helper functions
-//    virtual MyDB_TableReaderWriterPtr getInputSpec() = 0;
-//    virtual string getInputTableAlias() = 0;
-
 	virtual ~LogicalOp () {}
-
-    string predicateToString(vector<ExprTreePtr>& selectionPred) {
-
-        string predicate = "bool[true]";
-        int i = 0;
-
-        for (auto &s : selectionPred) {
-            string curClause = s->toString();
-            if (i == 0) {
-                predicate = curClause;
-            } else {
-                predicate = "&& (" + curClause + ", " + predicate + ")";
-            }
-            i++;
-        }
-
-        return predicate;
-
-    }
 };
 
 // a logical aggregation operation--in practice, this is going to be implemented using an Aggregate operation,
@@ -111,9 +88,9 @@ public:
 	//    first attribute in outputSpec, the second item in exprsToComput corresponds to the second attribute, etc.
 	//	
 	LogicalJoin (LogicalOpPtr leftInputOp, LogicalOpPtr rightInputOp, MyDB_TablePtr outputSpec,
-		vector <ExprTreePtr> &outputSelectionPredicate, vector <ExprTreePtr> &exprsToCompute, map<string, MyDB_TableReaderWriterPtr> &aliasToTableReaderWriters) : leftInputOp (leftInputOp),
+		vector <ExprTreePtr> &outputSelectionPredicate, vector <ExprTreePtr> &exprsToCompute) : leftInputOp (leftInputOp),
 		rightInputOp (rightInputOp), outputSpec (outputSpec), outputSelectionPredicate (outputSelectionPredicate),
-		exprsToCompute (exprsToCompute), aliasToTableReaderWriters(aliasToTableReaderWriters) {}
+		exprsToCompute (exprsToCompute) {}
 			
 	// this costs the entire query plan with the join at the top, returning the compute set of statistics for
 	// the output.  Note that it recursively costs the left and then the right, before using the statistics from
@@ -127,8 +104,6 @@ public:
 	// sides should be deleted (via a kill to killTable () on the buffer manager)
 	MyDB_TableReaderWriterPtr execute ();
 
-    string ExprTreeToRelOps(string input);
-
 private:
 
 	LogicalOpPtr leftInputOp;
@@ -137,8 +112,6 @@ private:
 	vector <ExprTreePtr> outputSelectionPredicate;
 	vector <ExprTreePtr> exprsToCompute;
 
-
-    map<string, MyDB_TableReaderWriterPtr> aliasToTableReaderWriters;
 };
 
 // a logical table scan operation---will be implemented with a BPlusSelection or a RegularSelection... note that
@@ -155,13 +128,13 @@ public:
 	//    associated with outputSpec
 	// inputStats: the complete set of input statistics, going into this table scan.  Statistics should be included
 	//    for each of the attributes in the table in inputSpec
-	// selectionPred: the selection predicate (clauses) to execute
+	// selectionPred: the selection predicate to execute
 	// exprsToCompute: the various projections to compute... for a logical table scan, this is always just a set
 	//    of attributes that we are asking for from a base table
 	//
 	LogicalTableScan (MyDB_TableReaderWriterPtr inputSpec, MyDB_TablePtr outputSpec, MyDB_StatsPtr inputStats, 
-		vector <ExprTreePtr> &selectionPred, vector <string> &exprsToCompute, string& alias) : inputSpec (inputSpec), outputSpec (outputSpec),
-		inputStats (inputStats), selectionPred (selectionPred), exprsToCompute (exprsToCompute), inputTableAlias(alias) {}
+		vector <ExprTreePtr> &selectionPred, vector <string> &exprsToCompute) : inputSpec (inputSpec), outputSpec (outputSpec),
+		inputStats (inputStats), selectionPred (selectionPred), exprsToCompute (exprsToCompute) {}
 
 	// this costs the table scan returning the compute set of statistics for the output
 	pair <double, MyDB_StatsPtr> cost ();
@@ -173,16 +146,13 @@ public:
 	// input into a join)
 	MyDB_TableReaderWriterPtr execute ();
 
-
 private:
 
 	MyDB_TableReaderWriterPtr inputSpec;
 	MyDB_TablePtr outputSpec;
 	MyDB_StatsPtr inputStats;
-    vector <ExprTreePtr> selectionPred;
+        vector <ExprTreePtr> selectionPred;
 	vector <string> exprsToCompute;
-
-    string inputTableAlias;
 };
 
 #endif

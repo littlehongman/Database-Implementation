@@ -33,7 +33,7 @@ public:
 	// cost a join
 	MyDB_StatsPtr costJoin (vector <ExprTreePtr> &allDisjunctions, MyDB_StatsPtr RHS);
 
-	// cost a selection predicate
+	// cost a selection predicte
 	MyDB_StatsPtr costSelection (vector <ExprTreePtr> &allDisjunctions);
 
 private:

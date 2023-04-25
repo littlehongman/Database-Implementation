@@ -165,27 +165,9 @@ int main (int numArgs, char **args) {
 					} else if (final->isSFWQuery ()) {
 
 						LogicalOpPtr myPlan = final->buildLogicalQueryPlan (allTables, allTableReaderWriters);
-
 						if (myPlan != nullptr) {
 							auto res = myPlan->cost ();
 							cout << "cost was " << res.first << "\n";
-
-                            // execute the plan
-                            MyDB_TableReaderWriterPtr output = myPlan->execute();
-
-                            // print out the results
-                            MyDB_RecordPtr temp = output->getEmptyRecord();
-                            MyDB_RecordIteratorAltPtr myIter = output->getIteratorAlt();
-
-                            // Counter => only output the first 30 results
-                            int count = 0;
-
-                            while (myIter->advance()) {
-                                myIter->getCurrent(temp);
-
-                                cout << temp << "\n";
-                            }
-
 						}
 					}
 

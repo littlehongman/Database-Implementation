@@ -12,6 +12,6 @@ where
 	and (l.l_commitdate < l.l_receiptdate)
 	and (l.l_shipdate < l.l_commitdate)
 	and (l.l_receiptdate > "1996-06-20" or l.l_receiptdate = "1996-06-20")
-	and (l.l_receiptdate < "1997-06-20" or l.l_receiptdate = "1997-06-20")
+	and (l.l_receiptdate < "1997-06-20" or l.l_receiptdate = "1997-06-20");
 group by
 	l.l_shipmode;
