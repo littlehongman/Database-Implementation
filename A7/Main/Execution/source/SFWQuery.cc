@@ -15,7 +15,7 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
         return buildOneTablePlan(allTables, allTableReaderWriters);
     }
 
-	else if (tablesToProcess.size () != 2){
+	else if (tablesToProcess.size () == 2){
         return buildTwoTablePlan(allTables, allTableReaderWriters);
 	}
 
