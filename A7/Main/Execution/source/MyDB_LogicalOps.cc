@@ -20,6 +20,22 @@ MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
     // First run the underlying operations
     MyDB_TableReaderWriterPtr inputTablePtr = inputOp->execute();
 
+//    // print out the results
+//    MyDB_RecordPtr temp = inputTablePtr->getEmptyRecord();
+//    MyDB_RecordIteratorAltPtr myIter = inputTablePtr->getIteratorAlt();
+//
+//    // Counter => only output the first 30 results
+//    int count = 0;
+//
+//    while (myIter->advance()) {
+//        myIter->getCurrent(temp);
+//
+//        cout << temp << "\n";
+//        count ++;
+//    }
+//    cout << count << endl;
+//
+
     // Define all the parameters needed for the JOIN
     // (1) Create an outputTable ReaderWriter
     MyDB_TableReaderWriterPtr outputTablePtr = make_shared<MyDB_TableReaderWriter>(outputSpec, inputTablePtr->getBufferMgr());

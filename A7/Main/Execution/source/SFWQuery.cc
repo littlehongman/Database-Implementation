@@ -3,6 +3,7 @@
 #define SFW_QUERY_CC
 
 #include "ParserTypes.h"
+//#include "Aggregate.h"
 	
 // builds and optimizes a logical query plan for a SFW query, returning the logical query plan
 // 
@@ -15,7 +16,7 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
         return buildOneTablePlan(allTables, allTableReaderWriters);
     }
 
-	else if (tablesToProcess.size () != 2){
+	else if (tablesToProcess.size () == 2){
         return buildTwoTablePlan(allTables, allTableReaderWriters);
 	}
 
@@ -26,16 +27,16 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {
 
 
-    // also, make sure that there are no aggregates in here
+
+    // Check if aggregate elements exist
     bool areAggs = false;
     for (auto a : valuesToSelect) {
         if (a->hasAgg ()) {
             areAggs = true;
         }
     }
-    if (groupingClauses.size () != 0 || areAggs) {
-        cout << "Sorry, we can't handle aggs or groupings yet!\n";
-        return nullptr;
+    if (groupingClauses.size () != 0) {
+        areAggs = true;
     }
 
     // find the two input tables
@@ -46,27 +47,45 @@ LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTabl
 
     vector<string> topExprs;
     MyDB_SchemaPtr topSchema = make_shared<MyDB_Schema>();
+    MyDB_SchemaPtr totSchema = make_shared<MyDB_Schema>();
 
     for (auto b: topTable->getSchema ()->getAtts ()) {
-        bool needIt = false;
+        bool needInSchema = false;
+        bool needInExpr = false;
 
         for (auto a: valuesToSelect) {
-            // If b in valuesToSelect
+
+            // If a is not an Agg, then just push_back th
             if (a->referencesAtt (tablesToProcess[0].second, b.first)) {
-                topExprs.push_back ("[" + b.first + "]");
-                needIt = true;
+                needInSchema = true;
+                needInExpr = true;
             }
         }
 
-        for (auto a: allDisjunctions){
+//        for (auto a: allDisjunctions){
+//            if (a->referencesAtt (tablesToProcess[0].second, b.first)) {
+//                needInSchema = true;
+//            }
+//        }
+
+        // We also want to include grouping clauses
+        for (auto a: groupingClauses){
             if (a->referencesAtt (tablesToProcess[0].second, b.first)) {
-                needIt = true;
+                needInSchema = true;
+                needInExpr = true;
             }
         }
 
-        if (needIt){
+        if (needInSchema){
             topSchema->getAtts ().push_back (make_pair (tablesToProcess[0].second + "_" + b.first, b.second));
+            cout <<  tablesToProcess[0].second + "_" + b.first << endl;
         }
+
+        if (needInExpr) {
+            topExprs.push_back ("[" + b.first + "]");
+        }
+
+        //totSchema->getAtts ().push_back (make_pair (tablesToProcess[0].second + "_" + b.first, b.second));
     }
 
 
@@ -75,19 +94,29 @@ LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTabl
     // and get all of the attributes for the output
     MyDB_SchemaPtr outputSchema = make_shared <MyDB_Schema> ();
     int i = 0;
-        for (auto a: valuesToSelect) {
-
+    for (auto a: valuesToSelect) {
         outputSchema->getAtts ().push_back (make_pair ("att_" + to_string (i++), myRec.getType (a->toString ())));
     }
 
-
-    // and it's time to build the query plan
-    LogicalOpPtr returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+    if (!areAggs){
+        LogicalOpPtr returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
                                                                  make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema),
                                                                  make_shared <MyDB_Stats> (topTable, tablesToProcess[0].second), allDisjunctions, topExprs, tablesToProcess[0].second);
 
-    // done!!
-    return returnVal;
+        return returnVal;
+    }
+    else {
+        LogicalOpPtr tableSelectionPtr = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+                                                                 make_shared <MyDB_Table> ("tempTable", "tempStorageLoc", topSchema),
+                                                                 make_shared <MyDB_Stats> (topTable, tablesToProcess[0].second), allDisjunctions, topExprs, tablesToProcess[0].second);
+
+
+        LogicalOpPtr returnVal = make_shared <LogicalAggregate> (tableSelectionPtr, make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema), valuesToSelect, groupingClauses);
+
+        return returnVal;
+    }
+
+
 }
 
 LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {
