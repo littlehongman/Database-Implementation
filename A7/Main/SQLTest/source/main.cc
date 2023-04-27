@@ -165,7 +165,7 @@ int main (int numArgs, char **args) {
 
 					} else if (final->isSFWQuery ()) {
 
-						LogicalOpPtr myPlan = final->buildLogicalQueryPlan (allTables, allTableReaderWriters);
+						LogicalOpPtr myPlan = final->buildLogicalQueryPlan (allTables, allTableReaderWriters, allBPlusReaderWriters);
 
 						if (myPlan != nullptr) {
 							auto res = myPlan->cost ();

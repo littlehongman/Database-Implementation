@@ -9,11 +9,11 @@
 // 
 // note that this implementation only works for two-table queries that do not have an aggregation
 // 
-LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {
+LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, map <string, MyDB_BPlusTreeReaderWriterPtr> &allBPlusReaderWriters) {
 
     // Check how many tables we currently have
     if (tablesToProcess.size() == 1) {
-        return buildOneTablePlan(allTables, allTableReaderWriters);
+        return buildOneTablePlan(allTables, allTableReaderWriters, allBPlusReaderWriters);
     }
 
 	else if (tablesToProcess.size () == 2){
@@ -24,8 +24,7 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 
 }
 
-LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {
-
+LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, map <string, MyDB_BPlusTreeReaderWriterPtr> &allBPlusReaderWriters) {
 
 
     // Check if aggregate elements exist
@@ -67,10 +66,22 @@ LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTabl
             outputSchema->getAtts ().push_back (make_pair ("att_" + to_string (i++), myRec.getType (a->toString ())));
         }
 
+        LogicalOpPtr returnVal = nullptr;
 
-        LogicalOpPtr returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
-                                                                 make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema),
-                                                                 make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, topExprs, tablesToProcess[0].second);
+        if (allTableReaderWriters[tablesToProcess[0].first]->getTable()->getFileType() == "heap"){
+            returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+                                                                     make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema),
+                                                                     make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, topExprs, tablesToProcess[0].second, nullptr);
+
+        }
+        else{
+            returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+                                                        make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema),
+                                                        make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, topExprs, tablesToProcess[0].second, allBPlusReaderWriters[tablesToProcess[0].first]);
+
+        }
+
+
 
         return returnVal;
     }
@@ -139,7 +150,7 @@ LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTabl
 
         LogicalOpPtr tableSelectionPtr = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
                                                                  make_shared <MyDB_Table> ("tempTable", "tempStorageLoc", scanSchema),
-                                                                 make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, scanExprs, tablesToProcess[0].second);
+                                                                 make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, scanExprs, tablesToProcess[0].second, nullptr);
 
         LogicalOpPtr returnVal = make_shared <LogicalAggregate> (tableSelectionPtr, make_shared <MyDB_Table> ("aggTable", "aggStorageLoc", aggSchema), valuesToSelect, groupingClauses, make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema), outputExprs);
 
@@ -271,10 +282,10 @@ LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTabl
     // and it's time to build the query plan
     LogicalOpPtr leftTableScan = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
                                                                  make_shared <MyDB_Table> ("leftTable", "leftStorageLoc", leftSchema),
-                                                                 make_shared <MyDB_Stats> (leftTable, tablesToProcess[0].second), leftCNF, leftExprs, tablesToProcess[0].second);
+                                                                 make_shared <MyDB_Stats> (leftTable, tablesToProcess[0].second), leftCNF, leftExprs, tablesToProcess[0].second, nullptr);
     LogicalOpPtr rightTableScan = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[1].first],
                                                                   make_shared <MyDB_Table> ("rightTable", "rightStorageLoc", rightSchema),
-                                                                  make_shared <MyDB_Stats> (rightTable, tablesToProcess[1].second), rightCNF, rightExprs, tablesToProcess[1].second);
+                                                                  make_shared <MyDB_Stats> (rightTable, tablesToProcess[1].second), rightCNF, rightExprs, tablesToProcess[1].second, nullptr);
     LogicalOpPtr returnVal = make_shared <LogicalJoin> (leftTableScan, rightTableScan,
                                                         make_shared <MyDB_Table> ("topTable", "topStorageLoc", topSchema), topCNF, valuesToSelect, usedTableReaderWriters);
 

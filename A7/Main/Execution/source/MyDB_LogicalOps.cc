@@ -7,6 +7,7 @@
 #include "SortMergeJoin.h"
 #include "ScanJoin.h"
 #include "Aggregate.h"
+#include "BPlusSelection.h"
 
 // fill this out!  This should actually run the aggregation via an appropriate RelOp, and then it is going to
 // have to unscramble the output attributes and compute exprsToCompute using an execution of the RegularSelection 
@@ -241,9 +242,43 @@ MyDB_TableReaderWriterPtr LogicalTableScan :: execute () {
         }
     }
 
-    // Run the RegularSelection
-    RegularSelection myOp(inputSpec, outputTablePtr, predicate, exprsToCompute);
-    myOp.run();
+    if (inputSpec->getTable()->getFileType() == "heap"){
+        RegularSelection myOp(inputSpec, outputTablePtr, predicate, exprsToCompute);
+        myOp.run();
+    }
+    else if (inputSpec->getTable()->getFileType() == "bplustree"){
+        string sortAtt = inputSpec->getTable()->getSortAtt();
+        MyDB_StringAttValPtr low = make_shared<MyDB_StringAttVal>();
+        MyDB_StringAttValPtr high = make_shared<MyDB_StringAttVal>();
+
+        low->set("");
+        high->set("~~~~~~~~~");
+
+        for (auto a: selectionPred) {
+            // Check the if the table is involved in the disjunction
+            // (Here we only consider joining two tables), so we use index to tableToProcess
+            if (a->referencesAtt (inputTableAlias, sortAtt)){
+                if (a->isEq()){
+                    string attStr = a->getRHS()->toString();
+                    string att = attStr.substr(7, attStr.length()-8);
+
+                    low->set(att);
+                    high->set(att);
+                }
+            }
+        }
+
+
+
+
+        BPlusSelection myOp(BPlusInputSpec, outputTablePtr, low, high,
+                            predicate,
+                            exprsToCompute);
+
+        myOp.run();
+    }
+
+
 
 	return outputTablePtr;
 }

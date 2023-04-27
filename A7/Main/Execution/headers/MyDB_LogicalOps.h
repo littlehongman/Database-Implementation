@@ -5,6 +5,7 @@
 #include "MyDB_Stats.h"
 #include "MyDB_TableReaderWriter.h"
 #include "ExprTree.h"
+#include "MyDB_BPlusTreeReaderWriter.h"
 
 
 // create a smart pointer for database tables
@@ -163,8 +164,8 @@ public:
 	//    of attributes that we are asking for from a base table
 	//
 	LogicalTableScan (MyDB_TableReaderWriterPtr inputSpec, MyDB_TablePtr outputSpec, MyDB_StatsPtr inputStats, 
-		vector <ExprTreePtr> &selectionPred, vector <string> &exprsToCompute, string& alias) : inputSpec (inputSpec), outputSpec (outputSpec),
-		inputStats (inputStats), selectionPred (selectionPred), exprsToCompute (exprsToCompute), inputTableAlias(alias) {}
+		vector <ExprTreePtr> &selectionPred, vector <string> &exprsToCompute, string& alias, MyDB_BPlusTreeReaderWriterPtr BPlusInputSpec) : inputSpec (inputSpec), outputSpec (outputSpec),
+		inputStats (inputStats), selectionPred (selectionPred), exprsToCompute (exprsToCompute), inputTableAlias(alias), BPlusInputSpec(BPlusInputSpec) {}
 
 	// this costs the table scan returning the compute set of statistics for the output
 	pair <double, MyDB_StatsPtr> cost ();
@@ -186,6 +187,7 @@ private:
 	vector <string> exprsToCompute;
 
     string inputTableAlias;
+    MyDB_BPlusTreeReaderWriterPtr BPlusInputSpec;
 };
 
 #endif
