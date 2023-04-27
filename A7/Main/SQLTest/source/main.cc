@@ -181,10 +181,10 @@ int main (int numArgs, char **args) {
                             auto stop = std::chrono::high_resolution_clock::now();
 
                             // Calculate the duration
-                            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+                            auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
 
                             // Print the duration in microseconds
-                            std::cout << "Duration: " << duration.count() << " microseconds" << std::endl;
+                            std::cout << "Duration: " << duration.count() << " seconds" << std::endl;
 
                             // print out the results
                             MyDB_RecordPtr temp = output->getEmptyRecord();
