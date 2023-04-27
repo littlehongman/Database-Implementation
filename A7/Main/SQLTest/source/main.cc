@@ -195,11 +195,12 @@ int main (int numArgs, char **args) {
 
                             while (myIter->advance()) {
                                 myIter->getCurrent(temp);
-
-                                cout << temp << "\n";
+                                // First 30 results
+                                if (count < 30)
+                                    cout << temp << "\n";
                                 count ++;
                             }
-                            cout << count << endl;
+                            cout << "total count: " << count << "\n";
 
 						}
 					}
