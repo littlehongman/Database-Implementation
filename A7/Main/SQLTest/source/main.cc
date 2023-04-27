@@ -197,7 +197,9 @@ int main (int numArgs, char **args) {
                                 myIter->getCurrent(temp);
 
                                 cout << temp << "\n";
+                                count ++;
                             }
+                            cout << count << endl;
 
 						}
 					}

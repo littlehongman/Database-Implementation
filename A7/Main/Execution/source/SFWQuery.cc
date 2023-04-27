@@ -3,6 +3,7 @@
 #define SFW_QUERY_CC
 
 #include "ParserTypes.h"
+//#include "Aggregate.h"
 	
 // builds and optimizes a logical query plan for a SFW query, returning the logical query plan
 // 
@@ -26,68 +27,126 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {
 
 
-    // also, make sure that there are no aggregates in here
+
+    // Check if aggregate elements exist
     bool areAggs = false;
     for (auto a : valuesToSelect) {
         if (a->hasAgg ()) {
             areAggs = true;
         }
     }
-    if (groupingClauses.size () != 0 || areAggs) {
-        cout << "Sorry, we can't handle aggs or groupings yet!\n";
-        return nullptr;
+    if (groupingClauses.size () != 0) {
+        areAggs = true;
     }
 
-    // find the two input tables
-    MyDB_TablePtr topTable = allTables[tablesToProcess[0].first];
+    // find the input tables
+    MyDB_TablePtr inputTable = allTables[tablesToProcess[0].first];
 
     // We do not need to build a  CNF here, because we only have one table
     // CNF == allDisjunctions
 
-    vector<string> topExprs;
-    MyDB_SchemaPtr topSchema = make_shared<MyDB_Schema>();
-
-    for (auto b: topTable->getSchema ()->getAtts ()) {
-        bool needIt = false;
+    if (!areAggs){
+        vector<string> topExprs;
+        MyDB_SchemaPtr topSchema = make_shared<MyDB_Schema>();
 
         for (auto a: valuesToSelect) {
-            // If b in valuesToSelect
-            if (a->referencesAtt (tablesToProcess[0].second, b.first)) {
-                topExprs.push_back ("[" + b.first + "]");
-                needIt = true;
+            for (auto b: inputTable->getSchema ()->getAtts ()) {
+                if (a->referencesAtt (tablesToProcess[0].second, b.first)) {
+                    topExprs.push_back ("[" + b.first + "]");
+                    topSchema->getAtts ().push_back (make_pair (tablesToProcess[0].second + "_" + b.first, b.second));
+                }
             }
         }
 
-        for (auto a: allDisjunctions){
-            if (a->referencesAtt (tablesToProcess[0].second, b.first)) {
-                needIt = true;
-            }
-        }
+        MyDB_Record myRec (topSchema);
 
-        if (needIt){
-            topSchema->getAtts ().push_back (make_pair (tablesToProcess[0].second + "_" + b.first, b.second));
-        }
-    }
-
-
-    MyDB_Record myRec (topSchema);
-
-    // and get all of the attributes for the output
-    MyDB_SchemaPtr outputSchema = make_shared <MyDB_Schema> ();
-    int i = 0;
+        // Get schema for output
+        MyDB_SchemaPtr outputSchema = make_shared <MyDB_Schema> ();
+        int i = 0;
         for (auto a: valuesToSelect) {
+            outputSchema->getAtts ().push_back (make_pair ("att_" + to_string (i++), myRec.getType (a->toString ())));
+        }
 
-        outputSchema->getAtts ().push_back (make_pair ("att_" + to_string (i++), myRec.getType (a->toString ())));
-    }
 
-
-    // and it's time to build the query plan
-    LogicalOpPtr returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+        LogicalOpPtr returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
                                                                  make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema),
-                                                                 make_shared <MyDB_Stats> (topTable, tablesToProcess[0].second), allDisjunctions, topExprs, tablesToProcess[0].second);
+                                                                 make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, topExprs, tablesToProcess[0].second);
 
-    // done!!
-    return returnVal;
+        return returnVal;
+    }
+    else {
+        vector<string> scanExprs;
+        MyDB_SchemaPtr scanSchema = make_shared<MyDB_Schema>();
+
+        for (auto a: valuesToSelect) {
+            for (auto b: inputTable->getSchema ()->getAtts ()) {
+                if (a->referencesAtt (tablesToProcess[0].second, b.first)) {
+                    string valueStr = a->toString();
+                    string typeStr = valueStr.substr(0, 3);
+
+                    if (typeStr == "avg" || typeStr == "sum" || typeStr == "cnt"){
+                        scanExprs.push_back ("[" + b.first + "]");
+                    }
+                    else{
+                        scanExprs.push_back (a->toString());
+                    }
+
+                    scanSchema->getAtts ().push_back (make_pair (tablesToProcess[0].second + "_" + b.first, b.second));
+                }
+            }
+        }
+
+        MyDB_Record myRec (scanSchema);
+//        vector<string> aggExprs;
+        MyDB_SchemaPtr aggSchema = make_shared<MyDB_Schema>();
+
+        int i = 0, j = 0;
+        for (auto a: groupingClauses){
+            aggSchema->getAtts().push_back(make_pair("group_" + to_string (i++), myRec.getType(a->toString())));
+        }
+
+        i = 0;
+        for (auto a: valuesToSelect) {
+            if (a->hasAgg()) {
+                string exprStr = a->toString();
+                string typeStr = exprStr.substr(0, 3);
+                string columnStr = exprStr.substr(4, exprStr.length() - 1);
+
+                if (typeStr == "avg" || typeStr == "sum" | typeStr == "cnt"){
+                    aggSchema->getAtts().push_back(make_pair("agg_" + to_string (i++), myRec.getType(a->toString())));
+                }
+
+            }
+        }
+
+
+        // Get schema for output
+        MyDB_SchemaPtr outputSchema = make_shared <MyDB_Schema> ();
+        vector<string> outputExprs = {};
+        i = 0;
+        for (auto a: valuesToSelect) {
+            if (!a->hasAgg()) {
+                outputSchema->getAtts ().push_back (make_pair ("group_" + to_string (i), myRec.getType (a->toString ())));
+                outputExprs.push_back("[group_" + to_string (i++) + ']');
+            }
+            else {
+                outputSchema->getAtts ().push_back (make_pair ("agg_" + to_string (j), myRec.getType (a->toString ())));
+                outputExprs.push_back("[agg_" + to_string (j++) + ']');
+            }
+
+        }
+
+
+        LogicalOpPtr tableSelectionPtr = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+                                                                 make_shared <MyDB_Table> ("tempTable", "tempStorageLoc", scanSchema),
+                                                                 make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, scanExprs, tablesToProcess[0].second);
+
+        LogicalOpPtr returnVal = make_shared <LogicalAggregate> (tableSelectionPtr, make_shared <MyDB_Table> ("aggTable", "aggStorageLoc", aggSchema), valuesToSelect, groupingClauses, make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema), outputExprs);
+
+        return returnVal;
+    }
+
+
 }
 
 LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {

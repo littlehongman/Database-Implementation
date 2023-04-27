@@ -6,6 +6,7 @@
 #include "RegularSelection.h"
 #include "SortMergeJoin.h"
 #include "ScanJoin.h"
+#include "Aggregate.h"
 
 // fill this out!  This should actually run the aggregation via an appropriate RelOp, and then it is going to
 // have to unscramble the output attributes and compute exprsToCompute using an execution of the RegularSelection 
@@ -15,9 +16,87 @@
 // Note that after the left and right hand sides have been executed, the temporary tables associated with the two 
 // sides should be deleted (via a kill to killFile () on the buffer manager)
 MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
-	return nullptr;
 
+    // First run the underlying operations
+    MyDB_TableReaderWriterPtr inputTablePtr = inputOp->execute();
+
+//    // print out the results
+//    MyDB_RecordPtr temp = inputTablePtr->getEmptyRecord();
+//    MyDB_RecordIteratorAltPtr myIter = inputTablePtr->getIteratorAlt();
+//
+//    // Counter => only output the first 30 results
+//    int count = 0;
+//
+//    while (myIter->advance()) {
+//        myIter->getCurrent(temp);
+//
+//        cout << temp << "\n";
+//        count ++;
+//    }
+//    cout << count << endl;
+//
+
+    // Define all the parameters needed for the JOIN
+    // (1) Create an outputTable ReaderWriter
+    MyDB_TableReaderWriterPtr aggTablePtr = make_shared<MyDB_TableReaderWriter>(aggSpec, inputTablePtr->getBufferMgr());
+
+    // (2) Create agg pairs to compute
+    vector<pair<MyDB_AggType, string>> aggsToCompute;
+
+    for (auto a: exprsToCompute) {
+        if (a->hasAgg()) {
+            string exprStr = a->toString();
+            string typeStr = exprStr.substr(0, 3);
+            string columnStr = exprStr.substr(4, exprStr.length() - 1);
+
+            if (typeStr == "avg"){
+                aggsToCompute.push_back(make_pair(MyDB_AggType::avg, columnStr));
+            }
+            else if (typeStr == "sum"){
+                aggsToCompute.push_back(make_pair(MyDB_AggType::sum, columnStr));
+            }
+            else if (typeStr == "cnt"){
+                aggsToCompute.push_back(make_pair(MyDB_AggType::cnt, columnStr));
+            }
+        }
+    }
+
+    // (3) Turn Grouping ExprTrees into strings
+    vector<string> groupingStrs;
+
+    for (auto a: groupings){
+        groupingStrs.push_back(a->toString());
+    }
+
+    Aggregate myOp(inputTablePtr, aggTablePtr, aggsToCompute ,groupingStrs, "bool[true]");
+    myOp.run();
+
+//    // print out the results
+//    MyDB_RecordPtr temp = aggTablePtr->getEmptyRecord();
+//    MyDB_RecordIteratorAltPtr myIter = aggTablePtr->getIteratorAlt();
+//
+//    // Counter => only output the first 30 results
+//    int count = 0;
+//
+//    while (myIter->advance()) {
+//        myIter->getCurrent(temp);
+//
+//        cout << temp << "\n";
+//        count ++;
+//    }
+//    cout << count << endl;
+
+
+
+    // Run the last RegularSection -> To get correctly ordering attributes
+    MyDB_TableReaderWriterPtr outputTablePtr = make_shared<MyDB_TableReaderWriter>(outputSpec, inputTablePtr->getBufferMgr());
+
+    RegularSelection mySelectionOp(aggTablePtr, outputTablePtr, "bool[true]", finalExprsToCompute);
+    mySelectionOp.run();
+
+	return outputTablePtr;
 }
+
 // we don't really count the cost of the aggregate, so cost its subplan and return that
 pair <double, MyDB_StatsPtr> LogicalAggregate :: cost () {
 	return inputOp->cost ();
@@ -144,10 +223,27 @@ MyDB_TableReaderWriterPtr LogicalTableScan :: execute () {
 
     }
 
+    // (3) transform projection strings to the format that can read by RelOps
+    for (auto b: inputSpec->getTable()->getSchema()->getAtts()) {
+
+        for (int i = 0; i < exprsToCompute.size(); i++){
+            string projection = exprsToCompute[i];
+
+            string toReplace = inputTableAlias + "_" + b.first;
+            size_t start_pos = 0;
+
+            while((start_pos = projection.find(toReplace, start_pos)) != std::string::npos) {
+                projection.replace(start_pos, toReplace.length(), b.first);
+                start_pos += b.first.length(); // Handles case where 'to' is a substring of 'from'
+            }
+
+            exprsToCompute[i] = projection;
+        }
+    }
+
     // Run the RegularSelection
     RegularSelection myOp(inputSpec, outputTablePtr, predicate, exprsToCompute);
     myOp.run();
-
 
 	return outputTablePtr;
 }
