@@ -10,6 +10,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <chrono>
 
 using namespace std;
 string toLower (string data) {
@@ -170,8 +171,20 @@ int main (int numArgs, char **args) {
 							auto res = myPlan->cost ();
 							cout << "cost was " << res.first << "\n";
 
+                            // Start the timer
+                            auto start = std::chrono::high_resolution_clock::now();
+
                             // execute the plan
                             MyDB_TableReaderWriterPtr output = myPlan->execute();
+
+                            // Stop the timer
+                            auto stop = std::chrono::high_resolution_clock::now();
+
+                            // Calculate the duration
+                            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+                            // Print the duration in microseconds
+                            std::cout << "Duration: " << duration.count() << " microseconds" << std::endl;
 
                             // print out the results
                             MyDB_RecordPtr temp = output->getEmptyRecord();
