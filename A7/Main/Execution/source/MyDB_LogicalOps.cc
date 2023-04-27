@@ -38,7 +38,7 @@ MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
 
     // Define all the parameters needed for the JOIN
     // (1) Create an outputTable ReaderWriter
-    MyDB_TableReaderWriterPtr outputTablePtr = make_shared<MyDB_TableReaderWriter>(outputSpec, inputTablePtr->getBufferMgr());
+    MyDB_TableReaderWriterPtr aggTablePtr = make_shared<MyDB_TableReaderWriter>(aggSpec, inputTablePtr->getBufferMgr());
 
     // (2) Create agg pairs to compute
     vector<pair<MyDB_AggType, string>> aggsToCompute;
@@ -68,8 +68,31 @@ MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
         groupingStrs.push_back(a->toString());
     }
 
-    Aggregate myOp(inputTablePtr, outputTablePtr, aggsToCompute ,groupingStrs, "bool[true]");
+    Aggregate myOp(inputTablePtr, aggTablePtr, aggsToCompute ,groupingStrs, "bool[true]");
     myOp.run();
+
+//    // print out the results
+//    MyDB_RecordPtr temp = aggTablePtr->getEmptyRecord();
+//    MyDB_RecordIteratorAltPtr myIter = aggTablePtr->getIteratorAlt();
+//
+//    // Counter => only output the first 30 results
+//    int count = 0;
+//
+//    while (myIter->advance()) {
+//        myIter->getCurrent(temp);
+//
+//        cout << temp << "\n";
+//        count ++;
+//    }
+//    cout << count << endl;
+
+
+
+    // Run the last RegularSection -> To get correctly ordering attributes
+    MyDB_TableReaderWriterPtr outputTablePtr = make_shared<MyDB_TableReaderWriter>(outputSpec, inputTablePtr->getBufferMgr());
+
+    RegularSelection mySelectionOp(aggTablePtr, outputTablePtr, "bool[true]", finalExprsToCompute);
+    mySelectionOp.run();
 
 	return outputTablePtr;
 }
@@ -198,6 +221,24 @@ MyDB_TableReaderWriterPtr LogicalTableScan :: execute () {
             start_pos += b.first.length(); // Handles case where 'to' is a substring of 'from'
         }
 
+    }
+
+    // (3) transform projection strings to the format that can read by RelOps
+    for (auto b: inputSpec->getTable()->getSchema()->getAtts()) {
+
+        for (int i = 0; i < exprsToCompute.size(); i++){
+            string projection = exprsToCompute[i];
+
+            string toReplace = inputTableAlias + "_" + b.first;
+            size_t start_pos = 0;
+
+            while((start_pos = projection.find(toReplace, start_pos)) != std::string::npos) {
+                projection.replace(start_pos, toReplace.length(), b.first);
+                start_pos += b.first.length(); // Handles case where 'to' is a substring of 'from'
+            }
+
+            exprsToCompute[i] = projection;
+        }
     }
 
     // Run the RegularSelection
