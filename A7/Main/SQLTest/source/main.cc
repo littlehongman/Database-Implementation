@@ -168,8 +168,8 @@ int main (int numArgs, char **args) {
 						LogicalOpPtr myPlan = final->buildLogicalQueryPlan (allTables, allTableReaderWriters, allBPlusReaderWriters);
 
 						if (myPlan != nullptr) {
-							auto res = myPlan->cost ();
-							cout << "cost was " << res.first << "\n";
+                            auto res = myPlan->cost ();
+                            cout << "cost was " << res.first << "\n";
 
                             // Start the timer
                             auto start = std::chrono::high_resolution_clock::now();
@@ -195,11 +195,12 @@ int main (int numArgs, char **args) {
 
                             while (myIter->advance()) {
                                 myIter->getCurrent(temp);
-
-                                cout << temp << "\n";
+                                // First 30 results
+                                if (count < 30)
+                                    cout << temp << "\n";
                                 count ++;
                             }
-                            cout << count << endl;
+                            cout << "total count: " << count << "\n";
 
 						}
 					}
