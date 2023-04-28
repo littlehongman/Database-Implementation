@@ -147,10 +147,18 @@ LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTabl
 
         }
 
+        LogicalOpPtr tableSelectionPtr = nullptr;
 
-        LogicalOpPtr tableSelectionPtr = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
-                                                                 make_shared <MyDB_Table> ("tempTable", "tempStorageLoc", scanSchema),
-                                                                 make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, scanExprs, tablesToProcess[0].second, nullptr);
+        if (allTableReaderWriters[tablesToProcess[0].first]->getTable()->getFileType() == "heap"){
+            tableSelectionPtr = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+                                                                  make_shared <MyDB_Table> ("tempTable", "tempStorageLoc", scanSchema),
+                                                                  make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, scanExprs, tablesToProcess[0].second, nullptr);
+        }
+        else {
+            tableSelectionPtr = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+                                                                make_shared <MyDB_Table> ("tempTable", "tempStorageLoc", scanSchema),
+                                                                make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, scanExprs, tablesToProcess[0].second, allBPlusReaderWriters[tablesToProcess[0].first]);
+        }
 
         LogicalOpPtr returnVal = make_shared <LogicalAggregate> (tableSelectionPtr, make_shared <MyDB_Table> ("aggTable", "aggStorageLoc", aggSchema), valuesToSelect, groupingClauses, make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema), outputExprs);
 

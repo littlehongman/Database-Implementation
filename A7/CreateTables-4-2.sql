@@ -71,7 +71,7 @@ CREATE TABLE lineitem (
 	l_shipinstruct	STRING,
 	l_shipmode	STRING,
 	l_comment	STRING
-); AS BPLUSTREE ON l_receiptdate;
+) AS BPLUSTREE ON l_receiptdate;
 
 CREATE TABLE nation (
 	n_nationkey		INT,
