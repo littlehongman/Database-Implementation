@@ -11,13 +11,20 @@
 // 
 LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, map <string, MyDB_BPlusTreeReaderWriterPtr> &allBPlusReaderWriters) {
 
+    // Place nullptr if BPlusTree is not applicable to the table
+    for ( const auto &pair : allTableReaderWriters ) {
+        if (allBPlusReaderWriters.find(pair.first) == allBPlusReaderWriters.end()){
+            allBPlusReaderWriters[pair.first] = nullptr;
+        }
+    }
+
     // Check how many tables we currently have
     if (tablesToProcess.size() == 1) {
         return buildOneTablePlan(allTables, allTableReaderWriters, allBPlusReaderWriters);
     }
 
 	else if (tablesToProcess.size () == 2){
-        return buildTwoTablePlan(allTables, allTableReaderWriters);
+        return buildTwoTablePlan(allTables, allTableReaderWriters, allBPlusReaderWriters);
 	}
 
     return nullptr;
@@ -68,19 +75,10 @@ LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTabl
 
         LogicalOpPtr returnVal = nullptr;
 
-        if (allTableReaderWriters[tablesToProcess[0].first]->getTable()->getFileType() == "heap"){
-            returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
-                                                                     make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema),
-                                                                     make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, topExprs, tablesToProcess[0].second, nullptr);
 
-        }
-        else{
-            returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+        returnVal = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
                                                         make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema),
                                                         make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, topExprs, tablesToProcess[0].second, allBPlusReaderWriters[tablesToProcess[0].first]);
-
-        }
-
 
 
         return returnVal;
@@ -149,16 +147,11 @@ LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTabl
 
         LogicalOpPtr tableSelectionPtr = nullptr;
 
-        if (allTableReaderWriters[tablesToProcess[0].first]->getTable()->getFileType() == "heap"){
-            tableSelectionPtr = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
-                                                                  make_shared <MyDB_Table> ("tempTable", "tempStorageLoc", scanSchema),
-                                                                  make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, scanExprs, tablesToProcess[0].second, nullptr);
-        }
-        else {
-            tableSelectionPtr = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
+
+        tableSelectionPtr = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
                                                                 make_shared <MyDB_Table> ("tempTable", "tempStorageLoc", scanSchema),
                                                                 make_shared <MyDB_Stats> (inputTable, tablesToProcess[0].second), allDisjunctions, scanExprs, tablesToProcess[0].second, allBPlusReaderWriters[tablesToProcess[0].first]);
-        }
+
 
         LogicalOpPtr returnVal = make_shared <LogicalAggregate> (tableSelectionPtr, make_shared <MyDB_Table> ("aggTable", "aggStorageLoc", aggSchema), valuesToSelect, groupingClauses, make_shared <MyDB_Table> ("topTable", "topStorageLoc", outputSchema), outputExprs);
 
@@ -168,19 +161,18 @@ LogicalOpPtr SFWQuery :: buildOneTablePlan (map <string, MyDB_TablePtr> &allTabl
 
 }
 
-LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {
+LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, map <string, MyDB_BPlusTreeReaderWriterPtr> &allBPlusReaderWriters) {
 
 
-    // also, make sure that there are no aggregates in here
+    // Check if agg exists
     bool areAggs = false;
     for (auto a : valuesToSelect) {
         if (a->hasAgg ()) {
             areAggs = true;
         }
     }
-    if (groupingClauses.size () != 0 || areAggs) {
-        cout << "Sorry, we can't handle aggs or groupings yet!\n";
-        return nullptr;
+    if (groupingClauses.size () != 0 ) {
+        areAggs = true;
     }
 
     // find the two input tables
@@ -271,31 +263,80 @@ LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTabl
     // now we gotta figure out the top schema... get a record for the top
     MyDB_Record myRec (totSchema);
 
-    // and get all of the attributes for the output
+     //and get all of the attributes for the output
     MyDB_SchemaPtr topSchema = make_shared <MyDB_Schema> ();
-    int i = 0;
+    int i = 0, j= 0;
     for (auto a: valuesToSelect) {
-        topSchema->getAtts ().push_back (make_pair ("att_" + to_string (i++), myRec.getType (a->toString ())));
+        string attrStr = a->toString();
+
+        topSchema->getAtts ().push_back (make_pair (attrStr.substr(1, attrStr.length() - 2), myRec.getType (a->toString ())));
     }
     cout << "tot schema: " << totSchema << "\n";
     cout << "top schema: " << topSchema << "\n";
 
-    // Build a hash map that store table alias and its corresponding tableReaderWriter
-    map<string, MyDB_TableReaderWriterPtr> usedTableReaderWriters;
 
-    usedTableReaderWriters[tablesToProcess[0].second] = allTableReaderWriters[tablesToProcess[0].first];
-    usedTableReaderWriters[tablesToProcess[1].second] = allTableReaderWriters[tablesToProcess[1].first];
+    // Deal with Agg schema
+    MyDB_SchemaPtr aggSchema = make_shared<MyDB_Schema>();
+
+    i = 0, j = 0;
+    for (auto a: groupingClauses){
+        aggSchema->getAtts().push_back(make_pair("group_" + to_string (i++), myRec.getType(a->toString())));
+    }
+
+    i = 0;
+    for (auto a: valuesToSelect) {
+        if (a->hasAgg()) {
+            string exprStr = a->toString();
+            string typeStr = exprStr.substr(0, 3);
+            string columnStr = exprStr.substr(4, exprStr.length() - 1);
+
+            if (typeStr == "avg" || typeStr == "sum" | typeStr == "cnt"){
+                aggSchema->getAtts().push_back(make_pair("agg_" + to_string (i++), myRec.getType(a->toString())));
+            }
+
+        }
+    }
+
+    // Get schema for output
+    MyDB_SchemaPtr outputSchema = make_shared <MyDB_Schema> ();
+    vector<string> outputExprs = {};
+    i = 0;
+    for (auto a: valuesToSelect) {
+        if (!a->hasAgg()) {
+            outputSchema->getAtts ().push_back (make_pair ("group_" + to_string (i), myRec.getType (a->toString ())));
+            outputExprs.push_back("[group_" + to_string (i++) + ']');
+        }
+        else {
+            outputSchema->getAtts ().push_back (make_pair ("agg_" + to_string (j), myRec.getType (a->toString ())));
+            outputExprs.push_back("[agg_" + to_string (j++) + ']');
+        }
+
+    }
 
 
     // and it's time to build the query plan
+
     LogicalOpPtr leftTableScan = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first],
                                                                  make_shared <MyDB_Table> ("leftTable", "leftStorageLoc", leftSchema),
-                                                                 make_shared <MyDB_Stats> (leftTable, tablesToProcess[0].second), leftCNF, leftExprs, tablesToProcess[0].second, nullptr);
+                                                                 make_shared <MyDB_Stats> (leftTable, tablesToProcess[0].second), leftCNF, leftExprs, tablesToProcess[0].second, allBPlusReaderWriters[tablesToProcess[0].first]);
     LogicalOpPtr rightTableScan = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[1].first],
                                                                   make_shared <MyDB_Table> ("rightTable", "rightStorageLoc", rightSchema),
-                                                                  make_shared <MyDB_Stats> (rightTable, tablesToProcess[1].second), rightCNF, rightExprs, tablesToProcess[1].second, nullptr);
-    LogicalOpPtr returnVal = make_shared <LogicalJoin> (leftTableScan, rightTableScan,
-                                                        make_shared <MyDB_Table> ("topTable", "topStorageLoc", topSchema), topCNF, valuesToSelect, usedTableReaderWriters);
+                                                                  make_shared <MyDB_Stats> (rightTable, tablesToProcess[1].second), rightCNF, rightExprs, tablesToProcess[1].second, allBPlusReaderWriters[tablesToProcess[1].first]);
+    LogicalOpPtr returnVal = nullptr;
+
+    if (!areAggs){
+        returnVal = make_shared <LogicalJoin> (leftTableScan, rightTableScan,
+                                                            make_shared <MyDB_Table> ("topTable", "topStorageLoc", topSchema), topCNF, valuesToSelect);
+    }
+
+    else{
+        LogicalOpPtr tableJoinPtr = make_shared <LogicalJoin> (leftTableScan, rightTableScan,
+                                                            make_shared <MyDB_Table> ("topTable", "topStorageLoc", topSchema), topCNF, valuesToSelect);
+
+        returnVal = make_shared <LogicalAggregate> (tableJoinPtr, make_shared <MyDB_Table> ("aggTable", "aggStorageLoc", aggSchema), valuesToSelect, groupingClauses, make_shared <MyDB_Table> ("aggTable", "aggStorageLoc", outputSchema), outputExprs);
+    }
+
+
 
     // done!!
     return returnVal;

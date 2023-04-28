@@ -36,7 +36,8 @@ public:
 		map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, map <string, MyDB_BPlusTreeReaderWriterPtr> &allBPlusReaderWriters);
 
     LogicalOpPtr buildTwoTablePlan(map <string, MyDB_TablePtr> &allTables,
-                                   map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters);
+                                   map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters,
+                                   map <string, MyDB_BPlusTreeReaderWriterPtr> &allBPlusReaderWriters);
 
     LogicalOpPtr buildOneTablePlan(map <string, MyDB_TablePtr> &allTables,
                                    map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters,

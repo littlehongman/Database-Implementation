@@ -115,9 +115,9 @@ public:
 	//    first attribute in outputSpec, the second item in exprsToComput corresponds to the second attribute, etc.
 	//	
 	LogicalJoin (LogicalOpPtr leftInputOp, LogicalOpPtr rightInputOp, MyDB_TablePtr outputSpec,
-		vector <ExprTreePtr> &outputSelectionPredicate, vector <ExprTreePtr> &exprsToCompute, map<string, MyDB_TableReaderWriterPtr> &aliasToTableReaderWriters) : leftInputOp (leftInputOp),
+		vector <ExprTreePtr> &outputSelectionPredicate, vector <ExprTreePtr> &exprsToCompute) : leftInputOp (leftInputOp),
 		rightInputOp (rightInputOp), outputSpec (outputSpec), outputSelectionPredicate (outputSelectionPredicate),
-		exprsToCompute (exprsToCompute), aliasToTableReaderWriters(aliasToTableReaderWriters) {}
+		exprsToCompute (exprsToCompute) {}
 			
 	// this costs the entire query plan with the join at the top, returning the compute set of statistics for
 	// the output.  Note that it recursively costs the left and then the right, before using the statistics from
@@ -131,7 +131,7 @@ public:
 	// sides should be deleted (via a kill to killTable () on the buffer manager)
 	MyDB_TableReaderWriterPtr execute ();
 
-    string ExprTreeToRelOps(string input);
+//    string ExprTreeToRelOps(string input);
 
 private:
 
@@ -142,7 +142,7 @@ private:
 	vector <ExprTreePtr> exprsToCompute;
 
 
-    map<string, MyDB_TableReaderWriterPtr> aliasToTableReaderWriters;
+//    map<string, MyDB_TableReaderWriterPtr> aliasToTableReaderWriters;
 };
 
 // a logical table scan operation---will be implemented with a BPlusSelection or a RegularSelection... note that

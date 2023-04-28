@@ -155,11 +155,12 @@ MyDB_TableReaderWriterPtr LogicalJoin :: execute () {
 
 
         // The attribute is the left table
-        if (leftTable->getTable()->getSchema()->getAttByName(attrName1).first != -1){
-            hashAtts.push_back(make_pair(a->getLHS()->toString(), a->getRHS()->toString()));
+        if (leftTable->getTable()->getSchema()->getAttByName(attrName1.substr(1, attrName1.length() - 2)).first != -1){
+
+            hashAtts.push_back(make_pair(attrName1, attrName2));
         }
         else{
-            hashAtts.push_back(make_pair(a->getRHS()->toString(), a->getLHS()->toString()));
+            hashAtts.push_back(make_pair(attrName2, attrName1));
         }
     }
 
@@ -170,25 +171,25 @@ MyDB_TableReaderWriterPtr LogicalJoin :: execute () {
 	return outputTablePtr;
 }
 
-string LogicalJoin::ExprTreeToRelOps(string input) {
-    for (auto it = aliasToTableReaderWriters.begin(); it != aliasToTableReaderWriters.end(); ++it) {
-        std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
-
-
-        for (auto b: it->second->getTable()->getSchema()->getAtts()) {
-            string toReplace = it->first + "_" + b.first;
-            size_t pos = input.find(toReplace);
-
-            if (pos == std::string::npos){
-                continue;
-            }
-
-            input.replace(pos, toReplace.length(), b.first);
-        }
-    }
-
-    return input;
-}
+//string LogicalJoin::ExprTreeToRelOps(string input) {
+//    for (auto it = aliasToTableReaderWriters.begin(); it != aliasToTableReaderWriters.end(); ++it) {
+//        std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
+//
+//
+//        for (auto b: it->second->getTable()->getSchema()->getAtts()) {
+//            string toReplace = it->first + "_" + b.first;
+//            size_t pos = input.find(toReplace);
+//
+//            if (pos == std::string::npos){
+//                continue;
+//            }
+//
+//            input.replace(pos, toReplace.length(), b.first);
+//        }
+//    }
+//
+//    return input;
+//}
 
 // this costs the table scan returning the compute set of statistics for the output
 pair <double, MyDB_StatsPtr> LogicalTableScan :: cost () {
