@@ -195,13 +195,13 @@ LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTabl
         bool inRight = a->referencesTable (tablesToProcess[1].second);
 
         if (inLeft && inRight) {
-            cout << "top " << a->toString () << "\n";
+            //cout << "top " << a->toString () << "\n";
             topCNF.push_back (a);
         } else if (inLeft) {
-            cout << "left: " << a->toString () << "\n";
+            //cout << "left: " << a->toString () << "\n";
             leftCNF.push_back (a);
         } else {
-            cout << "right: " << a->toString () << "\n";
+            //cout << "right: " << a->toString () << "\n";
             rightCNF.push_back (a);
         }
     }
@@ -232,11 +232,11 @@ LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTabl
             leftSchema->getAtts ().push_back (make_pair (tablesToProcess[0].second + "_" + b.first, b.second));
             totSchema->getAtts ().push_back (make_pair (tablesToProcess[0].second + "_" + b.first, b.second));
             leftExprs.push_back ("[" + b.first + "]");
-            cout << "left expr: " << ("[" + b.first + "]") << "\n";
+            //cout << "left expr: " << ("[" + b.first + "]") << "\n";
         }
     }
 
-    cout << "left schema: " << leftSchema << "\n";
+    //cout << "left schema: " << leftSchema << "\n";
 
     // and see what we need from the right, and from the right
     for (auto b: rightTable->getSchema ()->getAtts ()) {
@@ -255,10 +255,10 @@ LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTabl
             rightSchema->getAtts ().push_back (make_pair (tablesToProcess[1].second + "_" + b.first, b.second));
             totSchema->getAtts ().push_back (make_pair (tablesToProcess[1].second + "_" + b.first, b.second));
             rightExprs.push_back ("[" + b.first + "]");
-            cout << "right expr: " << ("[" + b.first + "]") << "\n";
+           // cout << "right expr: " << ("[" + b.first + "]") << "\n";
         }
     }
-    cout << "right schema: " << rightSchema << "\n";
+    //cout << "right schema: " << rightSchema << "\n";
 
     // now we gotta figure out the top schema... get a record for the top
     MyDB_Record myRec (totSchema);
@@ -271,8 +271,8 @@ LogicalOpPtr SFWQuery :: buildTwoTablePlan (map <string, MyDB_TablePtr> &allTabl
 
         topSchema->getAtts ().push_back (make_pair (attrStr.substr(1, attrStr.length() - 2), myRec.getType (a->toString ())));
     }
-    cout << "tot schema: " << totSchema << "\n";
-    cout << "top schema: " << topSchema << "\n";
+   // cout << "tot schema: " << totSchema << "\n";
+    //cout << "top schema: " << topSchema << "\n";
 
 
     // Deal with Agg schema

@@ -165,7 +165,7 @@ MyDB_TableReaderWriterPtr LogicalJoin :: execute () {
     }
 
 
-    ScanJoin myOp(leftTable, rightTable, outputTablePtr, predicate, projections, hashAtts, "bool[true]", "bool[true]");
+    SortMergeJoin myOp(leftTable, rightTable, outputTablePtr, predicate, projections, hashAtts[0], "bool[true]", "bool[true]");
     myOp.run();
 
 	return outputTablePtr;
