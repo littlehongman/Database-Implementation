@@ -32,56 +32,6 @@ SortMergeJoin :: SortMergeJoin (MyDB_TableReaderWriterPtr leftInput, MyDB_TableR
 void SortMergeJoin :: run () {
 
 
-//    // 1. Discard records from both inputs that do not satisfy selection predicate
-//
-//    // Run regularSection on leftInput to get the records that satisfy leftSelectionPredicate
-//    MyDB_TableReaderWriterPtr matchedLeftInput = make_shared <MyDB_TableReaderWriter> (leftInput->getTable(), leftInput->getBufferMgr());
-//
-//    MyDB_RecordPtr leftInputRec = leftInput->getEmptyRecord();
-//
-//    // Create func to run left selection predicate
-//    func leftPred = leftInputRec->compileComputation(leftSelectionPredicate);
-//
-//    // Create an iterator over left input table
-//    MyDB_RecordIteratorAltPtr leftInputIter = leftInput->getIteratorAlt();
-//
-//    while (leftInputIter->advance()){
-//        leftInputIter->getCurrent(leftInputRec);
-//
-//        // Check if the record satisfies the predicate
-//        if(!leftPred()->toBool()){
-//            continue;
-//        }
-//
-//        // Add the record to the output table
-//        matchedLeftInput->append(leftInputRec);
-//    }
-//
-//    // Run regularSection on rightInput to get the records that satisfy rightSelectionPredicate
-//    MyDB_TableReaderWriterPtr matchedRightInput = make_shared <MyDB_TableReaderWriter> (rightInput->getTable(), rightInput->getBufferMgr());
-//
-//    MyDB_RecordPtr rightInputRec = rightInput->getEmptyRecord();
-//
-//    // Create func to run right selection predicate
-//    func rightPred = rightInputRec->compileComputation(rightSelectionPredicate);
-//
-//    // Create an iterator over right input table
-//    MyDB_RecordIteratorAltPtr rightInputIter = rightInput->getIteratorAlt();
-//
-//    while (rightInputIter->advance()){
-//        rightInputIter->getCurrent(rightInputRec);
-//
-//        // Check if the record satisfies the predicate
-//        if(!rightPred()->toBool()){
-//            continue;
-//        }
-//
-//        // Add the record to the output table
-//        matchedRightInput->append(rightInputRec);
-//    }
-
-    // ALTERNATIVE 1 & 2: Use the built-in operator to do the sorted records with predicate selection
-
     // Get sorted left input table that satisfies left selection predicate
     MyDB_RecordPtr leftRec1 = leftInput->getEmptyRecord ();
     MyDB_RecordPtr leftRec2 = leftInput->getEmptyRecord ();

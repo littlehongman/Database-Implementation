@@ -26,7 +26,7 @@ void BPlusSelection :: run () {
     // Get an iterator from the B+ tree in the range(low, high)
     MyDB_RecordIteratorAltPtr inputIter = input->getRangeIteratorAlt(low, high);
 
-    // Create func to run predicate
+    // Create func to run predicate (Where clause)
     func selectPred = inputRec->compileComputation (selectionPredicate);
 
     // Get the set of computations that will be used to build the output record

@@ -17,10 +17,10 @@ ScanJoin :: ScanJoin (MyDB_TableReaderWriterPtr leftInputIn, MyDB_TableReaderWri
                 string rightSelectionPredicateIn) {
 
 	output = outputIn;
-	finalSelectionPredicate = finalSelectionPredicateIn;
+	finalSelectionPredicate = finalSelectionPredicateIn; // WHERE clause that include attribute from both table (== JOIN ON attributes)
 	projections = projectionsIn;
 
-	// we need to make sure that the left table is smaller
+	// We need to make sure that the left table is smaller
 
 	// see which table is bigger 
 	if (leftInputIn->getNumPages () < rightInputIn->getNumPages ()) {
@@ -32,20 +32,17 @@ ScanJoin :: ScanJoin (MyDB_TableReaderWriterPtr leftInputIn, MyDB_TableReaderWri
 		leftSelectionPredicate = leftSelectionPredicateIn;
 		rightSelectionPredicate = rightSelectionPredicateIn;
 
-		hadToSwapThem = false;
-
 	} else {
 
 		// if the right is smaller, swap everything
 		for (auto &a : equalityChecksIn) {
 			equalityChecks.push_back (make_pair (a.second, a.first));
 		}
+
 		rightTable = leftInputIn;
 		leftTable = rightInputIn;
 		rightSelectionPredicate = leftSelectionPredicateIn;
 		leftSelectionPredicate = rightSelectionPredicateIn;
-
-		hadToSwapThem = true;
 	}
 }
 
@@ -56,15 +53,17 @@ void ScanJoin :: run () {
 	// of the records with that hash value are located
 	unordered_map <size_t, vector <void *>> myHash;
 
-	// get all of the pages on left table
-	vector <MyDB_PageReaderWriter> allData;
+	// Get all of the pages on left table, and pinned to store in hash table
+	vector <MyDB_PageReaderWriter> allLeftData;
+
 	for (int i = 0; i < leftTable->getNumPages (); i++) {
 		MyDB_PageReaderWriter temp = leftTable->getPinned (i);
+
 		if (temp.getType () == MyDB_PageType :: RegularPage)
-			allData.push_back (leftTable->getPinned (i));
+            allLeftData.push_back (leftTable->getPinned (i));
 	}
 	
-	// get the left input record 
+	// Get the left input type record
 	MyDB_RecordPtr leftInputRec = leftTable->getEmptyRecord ();
 
 	// and get the various functions whose output we'll hash
@@ -77,7 +76,7 @@ void ScanJoin :: run () {
     func leftPred = leftInputRec->compileComputation (leftSelectionPredicate);
 
 	// add all of the records to the hash table
-	MyDB_RecordIteratorAltPtr myIter = getIteratorAlt (allData);
+	MyDB_RecordIteratorAltPtr myIter = getIteratorAlt (allLeftData);
 
 	while (myIter->advance ()) {
 
@@ -98,6 +97,8 @@ void ScanJoin :: run () {
 		// see if it is in the hash table
 		myHash [hashVal].push_back (myIter->getCurrentPointer ());
 	}
+
+    // Now that we have create a hash map that contains all key (hash value) and values (list of records) from
 
 	// and now we iterate through the other table
 	
@@ -140,7 +141,7 @@ void ScanJoin :: run () {
 
 		myIterAgain->getNext ();
 
-		// see if it is accepted by the preicate
+		// see if it is accepted by the predicate
 		if (!rightPred ()->toBool ()) {
 			continue;
 		}
